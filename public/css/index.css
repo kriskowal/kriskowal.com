@@ -113,10 +113,13 @@ header:after {
 
 table {
 	margin: 1em 0;
+	border: solid var(--color-gray-50) 1px;
+	border-collapse: collapse;
 }
 table td,
 table th {
-	padding-right: 1em;
+	padding: 0 1ex;
+	border: solid var(--color-gray-50) 1px;
 }
 
 pre,
@@ -137,9 +140,6 @@ pre:not([class*="language-"]) {
 	white-space: pre;
 	word-spacing: normal;
 	word-break: normal;
-}
-code {
-	word-break: break-all;
 }
 
 /* Header */
