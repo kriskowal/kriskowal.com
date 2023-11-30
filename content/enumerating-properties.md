@@ -37,19 +37,19 @@ Legend:
 * **SYM**: Includes properties named by a symbol. For example,
   `{[Symbol.toStringTag]: 'inline'}` has a symbol property.
 * **`k*`** indicates keys.
-* **`[k*]`** indicates an array keys.
-* **`[v*]`** indicatese an array values.
+* **`[k*]`** indicates an array of keys.
+* **`[v*]`** indicates an array of values.
 * **`{k:v*}`** indicates an object mapping keys to values.
 * **`{k:d*}`** indicates an object mapping keys to property descriptors.
 
 For objects with accessor properties (getters), JavaScript has two modes of
-copying: eager and lazy.
+copying, copy-by-value and copy-by-property.
 
-* Output that contains a `v` indicates the eager mode.
+* Output that contains a `v` indicates that the operation copied the value.
   The operation will synchronously capture a snapshot of the current
   value by calling the getter.
-  `Object.values`, `Object.entries`, `{...object}`, `Objeect.assign` exhibit
-  this behavior.
+  `Object.values`, `Object.entries`, `{...object}`, and `Objeect.assign`
+  call getter functions and copy-by-value.
 * When the output contains a `d`, the getter and setter are in the descriptor,
   as in `Object.getOwnPropertyDescriptors`.
-  The operation does not call the getter.
+  The operation does not call the getter and merely copies the descriptor.
