@@ -10,7 +10,7 @@
 		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="{{ metadata.title }}">
 		<link rel="alternate" href="/feed/feed.json" type="application/json" title="{{ metadata.title }}">
 
-		{#- Uncomment this if you’d like folks to know that you used Eleventy to build your site!  #}
+		{#- Uncomment this if you’d like folks to know that you used Eleventy to build your site!	 #}
 		{#- <meta name="generator" content="{{ eleventy.generator }}"> #}
 
 		{#-
@@ -37,6 +37,7 @@
 		<a href="#skip" class="visually-hidden">Skip to main content</a>
 
 		<header>
+			🧙‍♂️
 			<a href="/" class="home-link">{{ metadata.title }}</a>
 
 			{#- Read more about `eleventy-navigation` at https://www.11ty.dev/docs/plugins/navigation/ #}
@@ -47,6 +48,7 @@
 					<li class="nav-item"><a href="{{ entry.url }}"{% if entry.url == page.url %} aria-current="page"{% endif %}>{{ entry.title }}</a></li>
 				{%- endfor %}
 				</ul>
+				<a rel="me" href="https://social.coop/@kriskowal">🐘</a>
 			</nav>
 		</header>
 
