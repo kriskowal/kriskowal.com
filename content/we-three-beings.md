@@ -42,7 +42,7 @@ But for treasonous Cu’runír
 
 *(Refrain)*
 
-Sauron fell with Grima Wormtongue  
+Saruman fell with Grima Wormtongue  
 Gandalf sailed to the isle of song  
 Still on Earth  
 For what it's worth  
