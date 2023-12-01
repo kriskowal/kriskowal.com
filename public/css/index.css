@@ -270,6 +270,7 @@ h2 + .header-anchor {
 }
 
 .youtube-video-container {
+	margin-top: 1em;
 	position: relative;
 	overflow: hidden;
 	width: 100%;
