@@ -1,13 +1,11 @@
 ---
-title: Enumerating JavaScript object properties, let me count the ways
+title: How do I enumerate thee? Let me count the ways.
 layout: layouts/post.njk
 tags:
 - home
 - JavaScript
 date: 2023-11-29
 ---
-
-# How do I enumerate JavaScript object properties? Let me count the ways.
 
 > Why only string-named own enumerable data properties? JavaScript has a tremendous number of different constructs for enumerating the properties of an object, with different semantics of what subset they choose to enumerate:
 > <br>— [@erights](https://github.com/endojs/endo/blob/e1c63bf140be27a9c65538be207103b70cb06100/packages/pass-style/doc/copyRecord-guarantees.md#how-do-i-enumerate-thee-let-me-list-the-ways)
