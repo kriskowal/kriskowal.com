@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - home
 - JavaScript
+- Software Design
 date: 2011-05-10
 ---
 

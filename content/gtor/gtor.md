@@ -4,8 +4,12 @@ layout: layouts/post.njk
 tags:
 - home
 - JavaScript
+- Software Design
 date: 2014-08-09
 ---
+
+<div class="youtube-video-container"><iframe width="560" height="315" src="https://www.youtube.com/embed/2p51PE1MZ8U?si=XNUNZnDKgifNQkg5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+
 
 In 1905, Albert Einstein gave us a Special Theory of Relativity that unified
 the concepts of space and time in a single physical model.
