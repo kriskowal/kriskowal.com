@@ -7,9 +7,7 @@ tags:
 date: 2007-12-25
 ---
 
-<p></p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DlO1nepcdss?si=XmqTKaRWPWEFvA2K" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<div class="youtube-video-container"><iframe width="560" height="315" src="https://www.youtube.com/embed/DlO1nepcdss?si=XmqTKaRWPWEFvA2K" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
 
 During my brief whirlwind experience working at Apple right out of college, I
 may have done some very thorough Garage Band testing for a Mac OS software
