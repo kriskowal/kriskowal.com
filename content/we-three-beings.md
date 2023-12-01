@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - home
 - Tolkien
+- Yuletide
 date: 2017-12-20
 ---
 
