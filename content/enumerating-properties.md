@@ -41,7 +41,7 @@ Legend:
 * **`{k:d*}`** indicates an object mapping keys to property descriptors.
 
 For objects with accessor properties (getters), JavaScript has two modes of
-copying, copy-by-value and copy-by-property.
+copying, copy-by-value and copy-by-descriptor.
 
 * Output that contains a `v` indicates that the operation copied the value.
   The operation will synchronously capture a snapshot of the current
