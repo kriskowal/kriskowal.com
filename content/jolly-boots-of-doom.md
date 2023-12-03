@@ -19,6 +19,10 @@ Soresso (narrator), Andrew Wooster (beep boop), Mark Firth (narrator), Mike
 Smochko (beat box).
 I may have been able to sing in three octaves and play euphonium at the time.
 
+<audio controls src="/jolly-boots-of-doom.mp3"></audio>
+
+[Download “Jolly Boots of Doom”](/jolly-boots-of-doom.mp3)
+
 ---
 
 [{% image "cc-by-sa.png", "CC-BY-SA" %}](https://creativecommons.org/licenses/by-sa/4.0/)
