@@ -35,7 +35,7 @@ Tolkien gave to me,
 **Five [Istari](https://tolkiengateway.net/wiki/The_Istari),**  
 Four hungry hobbits,  
 Three elven rings,  
-**The two [Argonath](https://tolkiengateway.net/wiki/Argonath),**[‡](#zb)  
+**The two [Argonath](https://tolkiengateway.net/wiki/Argonath),**[‡](#zt)
 And one ring to rule them all.  
 
 On the sixth day of Yule,  
