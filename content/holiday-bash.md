@@ -2,8 +2,6 @@
 title: Holiday Bash
 layout: layouts/post.njk
 tags:
-- home
-- Bash
 - Yuletide
 date: 2008-12-12
 ---
