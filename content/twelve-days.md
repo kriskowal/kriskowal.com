@@ -53,7 +53,7 @@ Tolkien gave to me,
 Six Frodo books,  
 *Five Istari,*  
 Four hungry hobbits,  
-**[Three silmarils](https://tolkiengateway.net/wiki/Silmarils),**[†](#tw)
+**[Three silmarils](https://tolkiengateway.net/wiki/Silmarils),**[†](#tw)  
 The two Argonath,  
 And one ring to rule them all.  
 
