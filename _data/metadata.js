@@ -2,7 +2,7 @@ module.exports = {
 	title: "Kris Kowal",
 	url: "https://kriskowal.com/",
 	language: "en",
-	description: "The blog of a whole person.",
+	description: "Open Sourcerer",
 	author: {
 		name: "Kris Kowal",
 		email: "kriskowal@kriskowal.com",
