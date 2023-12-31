@@ -3,6 +3,7 @@ title: The Design Pattern That Shall Not Be Named
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Software Design
 date: 2016-06-06
 ---

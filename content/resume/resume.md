@@ -3,6 +3,7 @@ title: Blizzard Resume
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Art
 date: 2005-10-02
 ---

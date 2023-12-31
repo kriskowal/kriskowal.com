@@ -3,6 +3,7 @@ title: Map of Middle-earth
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Tolkien
 - Art
 date: 2010-09-10

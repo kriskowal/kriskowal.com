@@ -3,6 +3,7 @@ title: AOL Lamp
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Art
 date: 2001-10-28
 ---

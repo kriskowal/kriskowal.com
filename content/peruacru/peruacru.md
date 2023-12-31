@@ -3,6 +3,7 @@ title: Peruácru
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Game
 date: 2019-07-01
 ---

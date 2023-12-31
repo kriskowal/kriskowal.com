@@ -3,6 +3,7 @@ title: The Twelve Days of Yule
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Tolkien
 - Yuletide
 - Art

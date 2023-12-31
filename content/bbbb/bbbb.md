@@ -3,6 +3,7 @@ title: Basic Binary Board Book
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Baby Book
 date: 2021-01-04
 ---

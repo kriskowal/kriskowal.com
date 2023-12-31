@@ -3,6 +3,7 @@ title: Jolly Boots of Doom
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Yuletide
 - Art
 date: 2007-12-25

@@ -3,6 +3,7 @@ title: War of the Worlds 2.0
 layout: layouts/post.njk
 tags:
 - home
+- posts
 date: 2008-10-05
 ---
 

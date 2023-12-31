@@ -3,6 +3,7 @@ title: Tengwar
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - Tolkien
 date: 2019-10-31
 ---

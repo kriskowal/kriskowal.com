@@ -3,6 +3,7 @@ title: How do I enumerate thee? Let me count the ways.
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - JavaScript
 date: 2023-11-29
 ---

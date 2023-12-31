@@ -3,6 +3,7 @@ title: Uber to Agoric
 layout: layouts/post.njk
 tags:
 - home
+- posts
 date: 2020-04-08
 ---
 

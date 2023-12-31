@@ -3,6 +3,7 @@ title: A General Theory of Reactivity
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - JavaScript
 - Software Design
 date: 2014-08-09

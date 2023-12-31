@@ -3,6 +3,7 @@ title: How to design a JavaScript promise library
 layout: layouts/post.njk
 tags:
 - home
+- posts
 - JavaScript
 - Software Design
 date: 2011-05-10
