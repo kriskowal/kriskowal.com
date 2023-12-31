@@ -2,7 +2,7 @@
 title: On Root, Haiku
 layout: layouts/post.njk
 tags:
-- home
+- Art
 date: 2023-12-30
 ---
 
