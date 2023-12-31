@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - home
 - Yuletide
+- Art
 date: 2007-12-25
 ---
 

@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - home
 - Tolkien
+- Art
 date: 2010-09-10
 ---
 
