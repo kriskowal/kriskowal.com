@@ -5,7 +5,7 @@ module.exports = {
 	description: "Open Sourcerer",
 	author: {
 		name: "Kris Kowal",
-		email: "kriskowal@kriskowal.com",
+		email: "kris@cixar.com",
 		url: "https://kriskowal.com"
 	}
 }
