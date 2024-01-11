@@ -2,7 +2,6 @@
 title: Harmony
 layout: layouts/post.njk
 tags:
-- home
 - posts
 date: 2011-05-10
 ---
