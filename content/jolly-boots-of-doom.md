@@ -2,7 +2,6 @@
 title: Jolly Boots of Doom
 layout: layouts/post.njk
 tags:
-- home
 - posts
 - Yuletide
 - Art
