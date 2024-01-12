@@ -1,5 +1,5 @@
 ---
-title: Tengwar
+title: "Tengwar: Elvish Transcription"
 layout: layouts/post.njk
 tags:
 - home
