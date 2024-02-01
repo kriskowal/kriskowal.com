@@ -106,15 +106,15 @@ $ jot 9 | paste - - -
 7	8	9
 ```
 
-> On Linux, `jot` is spelled `seq`.
+On Linux, `jot` is spelled `seq`.
 
 You can use `xargs` to batch tuples.
 
 ```console
-$ paste <(jot 3) <(yes - | head -n 3) | xargs -n 2 echo '>'
-> 1 -
-> 2 -
-> 3 -
+$ paste <(jot 3) <(yes '>' | head -n 3) | xargs -n 2 echo '<'
+< 1 >
+< 2 >
+< 3 >
 ```
 
 Do not try to use shifty positional arguments in `bash`.
