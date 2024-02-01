@@ -146,7 +146,7 @@ Git branches do not need to be checked out.
 Commands like `git hash-object`, `git mktree`, and `git commit-tree` generate
 objects on the fly.
 
-```console
+```bash
 FILE=$(jot 10 | git hash-object -w --stdin)
 TREE=$(echo "100644 blob $FILE"$'\t'"lines.txt" | git mktree)
 NEXT=$(
