@@ -17,14 +17,15 @@ The JISH stack is the extraordinary combination of `bash`, `git`, and `jq`.
   JISH
 ```
 
-The JISH stack has three tenets:
+The JISH stack has three precepts and many tenets:
 
 * Give unto `bash` chonky long-lived pipelines.
 * Give unto `jq` data and math.
 * Give unto `git` temporary files and transactions.
 
 Be wary of the maximum command line argument length.
-Repeat after me: bash does not support arrays†.
+Repeat after me: bash does not support <a
+name="no-arrays">arrays[†](#dagger)</a>.
 Bash supports _file variables_.
 
 Here’s how you write to a file variable:
@@ -40,7 +41,7 @@ $ git cat-file blob "$HI"
 ```
 
 Never use `mktemp` again.
-Your temporary files will go away next time `git` does a `git gc`.
+Your temporary files will go away next time `git` does `gc`.
 
 With process substitution, file variables don’t need names.
 
@@ -50,10 +51,10 @@ HELLO
 ```
 
 Some commands like `diff` and `comm` accept multiple file variables.
-This command shows you whether `x` is sorted.
+This command shows you which lines of `x` are duplicates.
 
-```console
-$ diff x <(sort x)
+```bash
+diff <(sort x) <(sort -u x)
 ```
 
 `jq` accepts file variables.
@@ -132,14 +133,21 @@ $ echo "$X"
 Remember at all times that shell scripts are dynamically scoped, functions are
 not reentrant, and that any amount of hard work should be done in `jq`.
 
+Don’t pester the system clock.
+
+```bash
+NOW=$(date)
+```
+
 Git is a database and supports transactions.
 
 ```bash
-git fetch origin
-PREV=$(git rev-parse origin/main)
-# Make NEXT from PREV
-git push --force-with-lease=$NEXT:$PREV
-# Try again from top if push fails
+while
+  git fetch origin
+  PREV=$(git rev-parse origin/main)
+  # ... Make NEXT from PREV
+  ! git push --force-with-lease=$NEXT:$PREV
+do true; done
 ```
 
 Git branches do not need to be checked out.
@@ -153,10 +161,10 @@ NEXT=$(
   echo 'Add lines.txt' | \
   GIT_AUTHOR_NAME=You \
   GIT_AUTHOR_EMAIL=you@example.com \
-  GIT_AUTHOR_DATE=$(date) \
+  GIT_AUTHOR_DATE=$NOW \
   GIT_COMMITTER_NAME=You \
   GIT_COMMITTER_EMAIL=you@example.com \
-  GIT_COMMITTER_DATE=$(date) \
+  GIT_COMMITTER_DATE=$NOW \
   git commit-tree "$TREE" -p "$PREV"
 )
 ```
@@ -172,6 +180,59 @@ $ git cat-file blob "$TREE:lines.txt" | paste - -
 9	10
 ```
 
+If there is any chance a variable starts with `-` or `--`, most commands
+stop parsing arguments as flags after a `--` argument.
+
+```console
+FILE=--lines.txt
+touch -- "$FILE"
+rm -- "$FILE"
+```
+
+Just, don’t get too pedantic about it.
+Fully qualified paths will never start with `--`.
+
+Resolve paths to assets installed near your script with the `BASH_SOURCE`
+“array”.
+
+```bash
+ASSETDIR=$(dirname "${BASH_SOURCE[0]}")
+source "$ASSETDIR/library.sh"
+cat "$ASSETDIR/resource.json"
+```
+
+JISH stack is unreadable.
+Write comments that explain everything including the behavior of every flag you
+use, every time.
+
+This shows you the intersection of sets `x` and `y`:
+
+```bash
+# We want column 3, suppress 1 and 2.
+comm -12 <(sort x) <(sort y)
+```
+
+This shows you lines from `x` that are absent in `y`:
+
+```bash
+# We want column 1, suppress 2 and 3.
+comm -23 <(sort x) <(sort y)
+```
+
+This shows you lines from `y` that are absent in `x`:
+
+```bash
+# We want column 2, suppress 1 and 3.
+comm -13 <(sort x) <(sort y)
+```
+
+This shows you the union of sets `x` and `y`:
+
+```bash
+# Union of sets x and y
+sort -u x y
+```
+
 This preamble will save you a lot of trouble.
 
 ```bash
@@ -180,4 +241,8 @@ set -ueo pipefail
 IFS=$'\t\n'
 ```
 
-Use `shellcheck`.
+Use [`shellcheck`](https://www.shellcheck.net/).
+
+---
+
+<a name="dagger">[†](#no-arrays) It is dangerous to go alone. Take this.</a>
