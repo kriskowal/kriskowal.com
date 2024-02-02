@@ -77,6 +77,8 @@ $ jq '. + $update' \
 }
 ```
 
+<a name="echo">
+
 Echo is not for JSON.
 Don’t even think about it.
 
@@ -86,6 +88,8 @@ $ jq -n '{$a}' --arg a '{"'
   "a": "{\""
 }
 ```
+
+</a>
 
 You may have heard of `cut`.
 The function you know as `zip` in languages like Python is called `paste` in
