@@ -50,12 +50,13 @@ $ npx shon [ --string -- "$STRING" ]
 {"string":"-rf /"}
 ```
 
+Try the [**SHON Playground**](https://abhinav.github.io/shon-go/playground/)!
+
 ## Implementations
 
 - [SHON in JavaScript](https://www.npmjs.com/package/shon)
 - [SHON in Go](https://github.com/abhinav/shon-go)
 - [SHON in Rust](https://github.com/chaosteil/serde_shon)
-- [SHON Playground](https://abhinav.github.io/shon-go/playground/)
 - Of course, you should just use `jq`, as illustrated in [JISH](/jish/#echo).
 
 ## Credits
