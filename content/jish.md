@@ -96,7 +96,7 @@ The function you know as `zip` in languages like Python is called `paste` in
 in a shell.
 
 ```console
-$ paste <(jot 3) <(yes - | head -n 3)
+$ paste <(seq 3) <(yes - | head -n 3)
 1	-
 2	-
 3	-
@@ -105,18 +105,16 @@ $ paste <(jot 3) <(yes - | head -n 3)
 Really, `paste` is more like the `zip` for iterators.
 
 ```console
-$ jot 9 | paste - - -
+$ seq 9 | paste - - -
 1	2	3
 4	5	6
 7	8	9
 ```
 
-On Linux, `jot` is spelled `seq`.
-
 You can use `xargs` to batch tuples.
 
 ```console
-$ paste <(jot 3) <(yes '>' | head -n 3) | xargs -n 2 echo '<'
+$ paste <(seq 3) <(yes '>' | head -n 3) | xargs -n 2 echo '<'
 < 1 >
 < 2 >
 < 3 >
@@ -159,7 +157,7 @@ Commands like `git hash-object`, `git mktree`, and `git commit-tree` generate
 objects on the fly.
 
 ```bash
-FILE=$(jot 10 | git hash-object -w --stdin)
+FILE=$(seq 10 | git hash-object -w --stdin)
 TREE=$(echo "100644 blob $FILE"$'\t'"lines.txt" | git mktree)
 NEXT=$(
   echo 'Add lines.txt' | \
