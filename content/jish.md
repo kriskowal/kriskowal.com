@@ -57,6 +57,22 @@ This command shows you which lines of `x` are duplicates.
 diff <(sort x) <(sort -u x)
 ```
 
+Concatenate file variables.
+This program writes out a list of numbers from 1 to 20.
+
+```bash
+LIST=$(git hash-object -w /dev/null)
+LIST=$(git hash-object -w <(
+  git cat-file blob "$LIST"
+  seq 10
+))
+LIST=$(git hash-object -w <(
+  git cat-file blob "$LIST"
+  seq 11 20
+))
+git cat-file blob "$LIST"
+```
+
 `jq` accepts file variables.
 
 ```console
