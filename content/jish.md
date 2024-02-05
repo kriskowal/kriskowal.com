@@ -120,6 +120,15 @@ $ paste <(seq 3) <(yes '>' | head -n 3) | xargs -n 2 echo '<'
 < 3 >
 ```
 
+Pipelines can branch with process substitution.
+This program divides the numbers from 1 to 20 between `even.txt` and `odd.txt`.
+
+```bash
+seq 20 |
+  tee >(jq 'select(. % 2 == 0)' > even.txt) |
+  jq 'select(. % 2 == 1)' > odd.txt
+```
+
 Do not try to use shifty positional arguments in `bash`.
 Prefix a command or function call with any number of keyword arguments.
 These do not persist and you need not sully yourself with `local`.
