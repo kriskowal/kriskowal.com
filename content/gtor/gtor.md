@@ -677,7 +677,7 @@ repository.
 
 ## Sharing Streams
 
-![Streams Sharing](share.gif)
+![Streams Sharing](/gtor/share.gif)
 
 In this illustration, three consumers share an asynchronous iterator.
 The producer keeps a buffer full of numbers and terminates after producing 100
@@ -690,7 +690,7 @@ consumers.
 
 ## Forking Streams
 
-![Fork Streams](fork.gif)
+![Fork Streams](/gtor/fork.gif)
 
 In this illustration, all of the consumers need to see all of the values from
 the producer.
@@ -710,7 +710,7 @@ promise.
 The concurrency limit dictates how many of these outstanding promises the map
 function will permit.
 
-![Map with Streams](map.gif)
+![Map with Streams](/gtor/map.gif)
 
 This illustration shows a chain of map functions, each tapering down its
 concurrency limit.
@@ -726,7 +726,7 @@ Like our asynchronous map, the asynchronous reducer retains a concurrency limit.
 It also keeps a pool of glommed values around and opportunistically reduces
 values from the buffer and the input until only one remains.
 
-![Reduce with Streams](reduce.gif)
+![Reduce with Streams](/gtor/reduce.gif)
 
 This is an illustration of a reducer attempting to find the highest value
 from the producer.
@@ -738,7 +738,7 @@ Finally, it finds the highest value and resolves the returned promise.
 
 ## Mapping and Reducing Streams
 
-![Map and Reduce Streams](map-reduce.gif)
+![Map and Reduce Streams](/gtor/map-reduce.gif)
 
 And of course, mapping and reducing can be combined.
 
