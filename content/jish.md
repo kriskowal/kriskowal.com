@@ -167,14 +167,20 @@ NOW=$(date)
 ```
 
 Git is a database and supports transactions.
+This routine attempts to push a change that must be based on the exact prior
+repository state, and retries with [exponential backoff and full jitter](
+https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/).
 
 ```bash
 while
+  read -r ATTEMPT
   git fetch origin
   PREV=$(git rev-parse origin/main)
   # ... Make NEXT from PREV
   ! git push --force-with-lease=$NEXT:$PREV
-do true; done
+do
+  sleep "$(($RANDOM % (2 ** $ATTEMPT)))"
+done < <(seq infinity)
 ```
 
 Git branches do not need to be checked out.
@@ -269,6 +275,69 @@ IFS=$'\t\n'
 ```
 
 Use [`shellcheck`](https://www.shellcheck.net/).
+
+---
+
+# Appendix
+
+## Exponential Backoff with Full Jitter
+
+The previous example of pushing to `git` with exponential backoff used `bash`
+math so was limited to integer-second back-off durations.
+Frankly, I have run the above loop in a production system with thousands of
+humans submitting transactions at human-driven frequencies and the tool would
+have worked often enough without a retry loop that no one would have noticed or
+cared, and that program had no back-off at all.
+
+_However_, for the sake of commitment to the bit, the following program
+supports back-off with 32 bit resolution jitter.
+
+```bash
+#!/bin/bash
+set -ueo pipefail
+IFS=$'\t\n'
+
+function generate_backoff() {
+  # generate a stream of two columns:
+  # 1. powers of two
+  # 2. random 32 bit integers
+  paste <(
+    while read -r ATTEMPT; do
+      # jq does not support exponentiation,
+      # so we give it a boost
+      echo "$((2 ** ATTEMPT))"
+    done < <(seq infinity)
+  ) <(
+    while read -r RAND; do
+      # jq does not support hexadecimal,
+      # so we convert to decimal
+      printf "%d\n" "0x$RAND"
+    done < <(
+      # stream blocks of 16 hexadecimal nybbles out
+      # of the system random number source
+      xxd -c8 /dev/random |
+        cut -f2,3 -d' ' |
+        tr -d ' '
+    )
+  ) |
+  # From that stream of tuples, compute
+  # a time to sleep between attempts.
+  jq -R '
+    # parse tab separated numbers
+    [split("\t")[] | tonumber]
+    as [$base, $random] |
+    $base * $random / 4294967295
+  ' | head -n 10
+}
+
+while
+  read -r BACKOFF
+  # ! your_job_that_may_fail_here
+do
+  echo sleep "Retrying in $BACKOFF seconds..."
+  sleep "$BACKOFF"
+done < <(generate_backoff)
+```
 
 ---
 
