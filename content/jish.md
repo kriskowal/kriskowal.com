@@ -339,6 +339,72 @@ do
 done < <(generate_backoff)
 ```
 
+## Generating Github Pages
+
+The following program overwrites a `gh-pages` branch without touching your
+working copy, without switching branches.
+It does this by creating a temporary stage for a commit and building files
+directly into the `git` database.
+
+```bash
+#!/bin/bash
+set -ueo pipefail
+IFS=$'\t\n'
+
+HERE=$(dirname "${BASH_SOURCE[0]}")
+
+# For this project, I am using a JavaScript bundler I have installed with npm.
+export PATH="$HERE/node_modules/.bin:$PATH"
+
+# Git stores directories in a text file that it calls a "tree".
+# The text file is a table that captures the mode, (space), type, (space), hash,
+# (tab), and name of each entry.
+# This correspond to the output format of git ls-tree.
+# We can generate a directory list from whole cloth for all of the files we
+# must generate for gh-pages.
+function gentree() {
+  # The bundle command writes a JavaScript file to stdout.
+  # We capture that data into the git object store and interpolate the
+  # corresponding hash.
+  echo "100644 blob $(git hash-object -w <(bundle index.js))"$'\t'"bundle.js"
+  # Likewise, we simply copy bundle.html from our working copy but name it
+  # index.html instead.
+  echo "100644 blob $(git hash-object -w bundle.html)"$'\t'"index.html"
+}
+# Capture the hash of the generated directory.
+OVERLAY=$(gentree | git mktree)
+
+# Git recognizes some environment variables that override its default
+# behavior.
+# For example, GIT_INDEX_FILE defaults to .git/index, which is a file that
+# captures all the changes you have accumulated on top of the current branch
+# for your next commit.
+# We will use a temporary index to construct a commit for the gh-pages branch.
+export GIT_DIR="$HERE/.git"
+export GIT_INDEX_FILE=$(mktemp "$GIT_DIR/TEMP.XXXXXX")
+trap "rm $GIT_DIR/TEMP.*" exit
+
+# The next three commands edit our temporary index, from which will
+# build a tree and commit.
+# We begin with an empty index, like one gets after a git reset.
+git read-tree --empty
+# Then we copy two files from our working copy into the index.
+git add CNAME index.css
+# Then, we add the two files we generated.
+git read-tree $OVERLAY
+
+# Now, we capture the hash of the root directory we have generated.
+# Because this tree only loosly resembles our working copy, we use the
+# --missing-ok flag to silence irrelevant warnings.
+TREE=$(git write-tree --missing-ok)
+# Then, from the tree we can create a commit (an orphan with no --parent
+# commit).
+# Git commit-tree takes the commit message from stdin.
+COMMIT=$(git commit-tree $TREE < <(echo Create bundles))
+# We overwrite our new gh-branch reference to the generated commit.
+git update-ref refs/heads/gh-pages $COMMIT
+```
+
 ---
 
 <a name="dagger">[†](#no-arrays) It is dangerous to go alone. Take this.</a>
