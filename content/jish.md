@@ -370,33 +370,13 @@ function gentree() {
   # Likewise, we simply copy bundle.html from our working copy but name it
   # index.html instead.
   echo "100644 blob $(git hash-object -w bundle.html)"$'\t'"index.html"
+  # We just copy CNAME and index.css
+  echo "100644 blob $(git hash-object -w CNAME)"$'\t'"CNAME"
+  echo "100644 blob $(git hash-object -w index.css)"$'\t'"index.css"
 }
+
 # Capture the hash of the generated directory.
-OVERLAY=$(gentree | git mktree)
-
-# Git recognizes some environment variables that override its default
-# behavior.
-# For example, GIT_INDEX_FILE defaults to .git/index, which is a file that
-# captures all the changes you have accumulated on top of the current branch
-# for your next commit.
-# We will use a temporary index to construct a commit for the gh-pages branch.
-export GIT_DIR="$HERE/.git"
-export GIT_INDEX_FILE=$(mktemp "$GIT_DIR/TEMP.XXXXXX")
-trap "rm $GIT_DIR/TEMP.*" exit
-
-# The next three commands edit our temporary index, from which will
-# build a tree and commit.
-# We begin with an empty index, like one gets after a git reset.
-git read-tree --empty
-# Then we copy two files from our working copy into the index.
-git add CNAME index.css
-# Then, we add the two files we generated.
-git read-tree $OVERLAY
-
-# Now, we capture the hash of the root directory we have generated.
-# Because this tree only loosly resembles our working copy, we use the
-# --missing-ok flag to silence irrelevant warnings.
-TREE=$(git write-tree --missing-ok)
+TREE=$(gentree | git mktree)
 # Then, from the tree we can create a commit (an orphan with no --parent
 # commit).
 # Git commit-tree takes the commit message from stdin.
