@@ -110,7 +110,7 @@ Having a reference to an object represents the right to use it.
 
 This fine-grained object-oriented protocol design also trivializes coöperation
 between multiple threads or processes locally.
-Ad hoc message protocols and multiplexers are no longer necessary to coorinate
+Ad hoc message protocols and multiplexers are no longer necessary to coördinate
 jobs across worker boundaries, and the same protocols can stretch across hosts,
 and between strangers on the internet.
 
