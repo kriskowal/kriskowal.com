@@ -7,7 +7,7 @@ tags:
 date: 2005-10-02
 ---
 
-[{% image "resume-small.jpg", "A parchment resume" %}](resume-large.jpg)
+[{% image "resume-small.jpg", "A parchment resume" %}](/resume/resume-large.jpg)
 
 I am an intrinsically motivated person.
 Being intrinsically motivated poses certain challenges for employment.
