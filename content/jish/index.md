@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - posts
 - home
+- JISH
 date: 2024-01-31
 ---
 
@@ -81,12 +82,12 @@ $ jq -nr '"\($hello), \($world)!"' \
   --rawfile world <(echo -n World)
 ```
 
-`jq` accepts JSON formatted file variables.
+`jq` accepts JSON stream file variables.
 
 ```console
-$ jq '. + $update' \
+$ jq '. + $update[0]' \
   <(jq -n '{a: 10}') \
-  --argfile update <(jq -n '{b: 20}')
+  --slurpfile update <(jq -n '{b: 20}')
 {
   "a": 10,
   "b": 20
@@ -143,6 +144,39 @@ This program divides the numbers from 1 to 20 between `even.txt` and `odd.txt`.
 seq 20 |
   tee >(jq 'select(. % 2 == 0)' > even.txt) |
   jq 'select(. % 2 == 1)' > odd.txt
+```
+
+You can use `jq` to sum numbers.
+
+```bash
+$ seq 100 | jq --slurp add
+5050
+```
+
+Unfortunately, `jq` is not so great with hexadecimal, but `printf` can manage.
+
+```bash
+$ printf "%d\n" "0xA"
+10
+```
+
+Which is relevant, because you can get hexadecimal out of `/dev/random` using
+`xxd`, which is available anywhere `vim` exists.
+It’s `vim` in a trenchcoat.
+
+```bash
+$ xxd /dev/random | head -n2
+00000000: 5d19 0642 b89a a7f6 5a65 4ba6 0dfe 5348  ]..B....ZeK...SH
+00000010: eaaa 565c fa1e df1b b22f 8c9f 8ed1 c1ad  ..V\...../......
+
+$ xxd -c4 -g0 -l4 /dev/random
+00000000: 551ed68f  U...
+
+$ xxd -c4 -g0 -l4 /dev/random | cut -d' ' -f2
+c5ed9d80
+
+$ printf "%d\n" "0x$(xxd -c4 -g0 -l4 /dev/random | cut -d' ' -f2)"
+1676787677
 ```
 
 Do not try to use shifty positional arguments in `bash`.
@@ -313,11 +347,10 @@ function generate_backoff() {
       # so we convert to decimal
       printf "%d\n" "0x$RAND"
     done < <(
-      # stream blocks of 16 hexadecimal nybbles out
+      # stream blocks of 8 hexadecimal nybbles out
       # of the system random number source
-      xxd -c8 /dev/random |
-        cut -f2,3 -d' ' |
-        tr -d ' '
+      xxd -c4 -g0 /dev/random |
+        cut -f2 -d' '
     )
   ) |
   # From that stream of tuples, compute
@@ -384,6 +417,12 @@ COMMIT=$(git commit-tree $TREE < <(echo Create bundles))
 # We overwrite our new gh-branch reference to the generated commit.
 git update-ref refs/heads/gh-pages $COMMIT
 ```
+
+---
+
+More about JISH:
+
+- [Tar to Git](/jish/git-write-archive/)
 
 ---
 
