@@ -163,7 +163,7 @@ git read-tree --empty
 git write-tree
 ```
 
-And if creating and cleaning up a temporary index chafes against your sense of
+And if creating and cleaning up a temporary index offends your sense of
 ideolgical purity, it is of course possible to roll up the tree hashes without
 it.
 
