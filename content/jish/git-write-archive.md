@@ -3,7 +3,6 @@ title: Tar to Git
 layout: layouts/post.njk
 tags:
 - posts
-- home
 - JISH
 date: 2024-03-30
 ---
