@@ -75,14 +75,20 @@ them to a shell command.
 Then, for all files in the archive, we use `git hash-object` to compute
 the SHA1 and write the content into the `git` content address store for
 future reference.
-Then, we print out a line from a Git tree with the assumed mode,
-hash, and path.
+Then, we print out a line from a Git tree with the corresponding mode, hash,
+and path.
+Git only distinguishes executable from non-executable for the owner and uses
+only [these two bit vectors for
+modes](https://github.com/git/git/blob/ab336e8f1c8009c8b1aab8deb592148e69217085/cache.h#L248).
 
 ```bash
   if [ "$TAR_FILETYPE" == "f" ]; then
-    printf "100644 blob %s\t%s\n" \
-      "$(git hash-object -w --stdin)" \
-      "$TAR_FILENAME"
+    HASH=$(git hash-object -w --stdin)
+    if [ "$(( TAR_MODE & 0100 ))" == 0 ]; then
+      printf "100644 blob $HASH\t$TAR_FILENAME\n"
+    else
+      printf "100755 blob $HASH\t$TAR_FILENAME\n"
+    fi
   fi
 ```
 
@@ -155,9 +161,12 @@ TAR=$(command -v gtar || command -v tar)
 git read-tree --empty
 "$TAR" xf - --to-command '
   if [ "$TAR_FILETYPE" == "f" ]; then
-    printf "100644 blob %s\t%s\n" \
-      "$(git hash-object -w --stdin)" \
-      "$TAR_FILENAME"
+    HASH=$(git hash-object -w --stdin)
+    if [ "$(( TAR_MODE & 0100 ))" == 0 ]; then
+      printf "100644 blob $HASH\t$TAR_FILENAME\n"
+    else
+      printf "100755 blob $HASH\t$TAR_FILENAME\n"
+    fi
   fi
 ' | git update-index --add --index-info
 git write-tree
