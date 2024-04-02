@@ -190,9 +190,12 @@ TAR=$(command -v gtar || command -v tar)
 STATE=$(
   "$TAR" xf - --to-command '
     if [ "$TAR_FILETYPE" == "f" ]; then
-      printf "100644 blob %s\t%s\n" \
-        "$(git hash-object -w --stdin)" \
-        "$TAR_FILENAME"
+      HASH=$(git hash-object -w --stdin)
+      if [ "$(( TAR_MODE & 0100 ))" == 0 ]; then
+        printf "100644 blob $HASH\t$TAR_FILENAME\n"
+      else
+        printf "100755 blob $HASH\t$TAR_FILENAME\n"
+      fi
     fi
   ' | git hash-object -w --stdin
 )
