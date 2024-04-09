@@ -3,6 +3,7 @@ title: A Choice of Giants
 layout: layouts/post.njk
 tags:
 - posts
+- home
 date: 2024-02-22
 ---
 
@@ -163,8 +164,8 @@ One does not pass an app on to their children.
 
 We need a better dream.
 
-I dream that the next frontier of the web is chat, where all social problems
-and solutions begin and end.
+I dream that the next frontier of the web starts with chat, where all social
+problems and solutions begin and end.
 The web needs some of that.
 
 Chat is a medium of distribution.

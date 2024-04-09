@@ -3,6 +3,7 @@ title: Endo
 layout: layouts/post.njk
 tags:
 - posts
+- home
 date: 2024-02-23
 ---
 
