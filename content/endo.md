@@ -65,10 +65,11 @@ contracts that span multiple chains.
 The same technologies could be combined for a workflow engine with
 mere Byzantine Fault Tolerance, when Sybil Attack Resistance is unnecessary.
 
-Agoric and MetaMask are also building a user agent, tentatively called a Pet
-Dæmon.
-The Pet Dæmon and Spritely’s Goblins both draw from the designs of earlier
-Power Boxes like the [DARPA Browser](http://www.combex.com/tech/darpaBrowser.html).
+Agoric and MetaMask are also building a user agent, tentatively called a
+Pet&nbsp;Dæmon. The Pet&nbsp;Dæmon and [Spritely’s
+Goblins](https://spritely.institute/goblins/) both draw from the designs of
+earlier Power Boxes like the [DARPA
+Browser](http://www.combex.com/tech/darpaBrowser.html).
 This is a single node operating on behalf of a single user, that can connect to
 the dæmons of other users and services.
 With the dæmon, a user can make, store, transmit, open, and manage the
