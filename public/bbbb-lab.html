@@ -1,0 +1,131 @@
+<style>
+	* {
+		box-sizing: border-box;
+	}
+  body {
+    margin: 0;
+  }
+</style>
+<canvas></canvas>
+<script type="module">
+
+const r1 = 100;
+const lineWidth = 25;
+const bitWidth = 4;
+
+const TAU = Math.PI * 2;
+const $canvas = document.querySelector('canvas');
+const canvas = $canvas.getContext('2d', {willReadFrequently: true});
+const size = Math.min(window.innerWidth, window.innerHeight);
+$canvas.height = size;
+$canvas.width = size;
+
+const clear = () => {
+  canvas.fillStyle = 'black';
+  canvas.beginPath();
+  canvas.rect(0, 0, size, size);
+  canvas.fill();
+}
+
+const circle = radius => {
+  canvas.beginPath();
+  canvas.arc(size / 2, size / 2, radius, 0, TAU);
+};
+
+const rays = (radius, count) => {
+  for (let i = 0; i < count; i++) {
+    canvas.beginPath();
+    canvas.moveTo(size / 2, size / 2);
+    canvas.lineTo(
+      size / 2 + radius * Math.cos(TAU / count * i),
+      size / 2 + radius * Math.sin(TAU / count * i),
+    );
+    canvas.stroke();
+  }
+};
+
+const weigh = () => {
+  const imageData = canvas.getImageData(0, 0, size, size);
+  const data = imageData.data;
+  let sum = 0;
+  let total = 0;
+  for (let i = 0; i < data.byteLength; i += 4) {
+    sum += (data[i]/255 + data[i + 1]/255 + data[i + 2]/255)/3;
+    total += 1;
+  }
+  return sum / total;
+};
+
+canvas.lineWidth = lineWidth;
+
+const basis = r1 => {
+  canvas.fillStyle = 'white';
+  circle(r1);
+  canvas.fill();
+
+  canvas.strokeStyle = 'black';
+  circle(r1 + lineWidth/2);
+  canvas.stroke();
+};
+
+const sum = values => values.reduce((a, b) => a + b, 0);
+
+const level = (...radii) => {
+  const width = sum(radii) + lineWidth * (radii.length - 1);
+
+  canvas.fillStyle = 'white';
+  canvas.strokeStyle = 'black';
+
+  circle(width);
+  canvas.fill();
+
+  rays(width, 2**(radii.length - 1));
+
+  circle(width + lineWidth/2);
+  canvas.stroke();
+
+  radii.pop();
+  if (radii.length === 1) {
+    basis(...radii);
+  } else {
+    level(...radii);
+  }
+};
+
+const hilo = async (count, lo, hi, tooLow) => {
+  let v;
+  for (let i = 0; i < count; i++) {
+    v = (lo + hi) / 2;
+    if (tooLow(v)) {
+      lo = v;
+    } else {
+      hi = v;
+    }
+    await new Promise(r => requestAnimationFrame(r));
+  }
+  return v;
+};
+
+clear();
+basis(r1);
+const w1 = weigh();
+
+const radii = [r1];
+const weights = [w1];
+
+for (let i = 2; i <= bitWidth; i++) {
+  let w;
+  let r = await hilo(50, 0, size, r => {
+    clear();
+    level(...radii, r);
+    w = weigh();
+    return w < (2**i-1) * w1;
+  });
+  radii.push(r);
+  weights.push(w);
+}
+
+console.log('stroke width', lineWidth);
+console.log('radii', radii);
+
+</script>
