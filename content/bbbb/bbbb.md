@@ -228,7 +228,7 @@ Magnusen proposed that the numbers <a href="a.html" target="computer">10</a> to
 <strong>frost</strong>.  It naturally follows that 0xB0 is
 <strong>betty</strong> and 0x1C is <strong>christeen</strong>.
 
-{% image "magnusen.jpg", "a page from Datamation magazine with a sample of Magnusen's pronunciation guide for hexadecimal" %}
+[{% image "magnusen.jpg", "a page from Datamation magazine with a sample of Magnusen's pronunciation guide for hexadecimal" %}](/bbbb/magnusen-large.jpg)
 
 So, `0xB0B5_C0FFEE_FACADE` is pronounced, “betty, betty-five, christy,
 frosty-frost, ernesty-ernest, frosty-anna, christy-anna, dotty-ernest”.
