@@ -169,6 +169,26 @@ The hexadecimal digits are
 So, the largest expressible number in a byte is 255 and we write that as
 `0xFF`.
 
+# Of bucks and bytes
+
+By dint of a strange coïncidence, the word “bit” means an eighth of a byte and
+also an eighth of a dollar.
+The word dollar comes from Spanish, and the Spanish got the word from
+a specific silver mine in a town of modern Czechia called Joachimsthal, or
+Saint Joachim’s Dale.
+So, the German “thal” means valley, is also seen in “neanderthal”, and gave
+English both the word “dale” and “dollar”.
+
+The silver dollar also gave Spanish pesos de ocho, or pieces of eight, which
+were slices of the dollar coin.
+Americans of the Victorian era called these bits, so a “two-bit saloon”
+costed twenty-five cents.
+
+Thus, there are eight bits to the dollar.
+The other <em>coining</em> of bit was for parts of a byte,
+but long before there was agreement that a byte should have eight bits.
+Many other word lengths existed.
+
 # Counting
 
 In the binary book, you can add one to a number by turning the page.
