@@ -230,6 +230,9 @@ Magnusen proposed that the numbers <a href="a.html" target="computer">10</a> to
 
 {% image "magnusen.jpg", "a page from Datamation magazine with a sample of Magnusen's pronunciation guide for hexadecimal" %}
 
+So, `0xB0B5_C0FFEE_FACADE` is pronounced, “betty, betty-five, christy,
+frosty-frost, ernesty-ernest, frosty-anna, christy-anna, dotty-ernest”.
+
 # Latin and Greek
 
 This book also notes the Latin and Greek roots for English numbers,
