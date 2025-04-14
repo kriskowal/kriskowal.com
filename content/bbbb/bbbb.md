@@ -55,14 +55,14 @@ The computer above has has <strong>four</strong> binary digits or
 Whenever you flip a switch, you change the number.
 You can touch or click a bit on this computer to <strong>toggle</strong>.
 
-So, if you take the number <a href="0.html" target="computer">zero</a>
+So, if you take the number <a href="/bbbb/0.html" target="computer">zero</a>
 and click or touch the center of the circle or the last bit of `0b0000`,
-it will turn to page <a href="1.html" target="computer">1</a>.
+it will turn to page <a href="/bbbb/1.html" target="computer">1</a>.
 If you then click or touch the next ring, with two segments, the number
-will turn to <a href="3.html" target="computer">three</a>, which has
+will turn to <a href="/bbbb/3.html" target="computer">three</a>, which has
 both of the <strong>least significant bits</strong>.
 If you turn off the center bit again, you go back down to <a
-href="2.html">two</a>.
+href="/bbbb/2.html">two</a>.
 
 When a switch is off, it represents the binary digit <strong>zero</strong>.
 When a switch is on, it represents the binary digit <strong>one</strong>.
@@ -74,10 +74,10 @@ On each of the pages of this binary book, there are four concentric rings,
 each representing a bit of a four digit number.
 The color of the ring and the number of segments in the ring represents its
 <strong>place value</strong>.
-So, the outer ring has <a href="8.html" target="computer">eight</a> segments.
-The next ring has <a href="4.html" target="computer">four</a>.
-The next ring has <a href="2.html" target="computer">two</a>.
-The innermost ring is simply a circle with <a href="1.html"
+So, the outer ring has <a href="/bbbb/8.html" target="computer">eight</a> segments.
+The next ring has <a href="/bbbb/4.html" target="computer">four</a>.
+The next ring has <a href="/bbbb/2.html" target="computer">two</a>.
+The innermost ring is simply a circle with <a href="/bbbb/1.html"
 target="computer">one</a> segment.
 Each segment has the same area, so should give you a visual sense for the
 doubling in value from inside to out and the total value of each number.
@@ -149,23 +149,22 @@ I would have spelled that <strong>nybble</strong>, but nobody asked me.
 In fairness, I didn't exist yet.
 
 The hexadecimal digits are
-<a href="0.html" target="computer">0</a>,
-<a href="1.html" target="computer">1</a>,
-<a href="1.html" target="computer">1</a>,
-<a href="2.html" target="computer">2</a>,
-<a href="3.html" target="computer">3</a>,
-<a href="4.html" target="computer">4</a>,
-<a href="5.html" target="computer">5</a>,
-<a href="6.html" target="computer">6</a>,
-<a href="7.html" target="computer">7</a>,
-<a href="8.html" target="computer">8</a>,
-<a href="9.html" target="computer">9</a>,
-<a href="A.html" target="computer">A</a>,
-<a href="B.html" target="computer">B</a>,
-<a href="C.html" target="computer">C</a>,
-<a href="D.html" target="computer">D</a>,
-<a href="E.html" target="computer">E</a>, and
-<a href="F.html" target="computer">F</a>.
+<a href="/bbbb/0.html" target="computer">0</a>,
+<a href="/bbbb/1.html" target="computer">1</a>,
+<a href="/bbbb/2.html" target="computer">2</a>,
+<a href="/bbbb/3.html" target="computer">3</a>,
+<a href="/bbbb/4.html" target="computer">4</a>,
+<a href="/bbbb/5.html" target="computer">5</a>,
+<a href="/bbbb/6.html" target="computer">6</a>,
+<a href="/bbbb/7.html" target="computer">7</a>,
+<a href="/bbbb/8.html" target="computer">8</a>,
+<a href="/bbbb/9.html" target="computer">9</a>,
+<a href="/bbbb/A.html" target="computer">A</a>,
+<a href="/bbbb/B.html" target="computer">B</a>,
+<a href="/bbbb/C.html" target="computer">C</a>,
+<a href="/bbbb/D.html" target="computer">D</a>,
+<a href="/bbbb/E.html" target="computer">E</a>, and
+<a href="/bbbb/F.html" target="computer">F</a>.
 So, the largest expressible number in a byte is 255 and we write that as
 `0xFF`.
 
@@ -201,15 +200,15 @@ to the next ring or next most significant bit.
 Carrying bits ripples up until it flips a switch from off to on.
 
 A strange thing happens when the four bit number runs out of bits.
-When you go to the next page from <a href="f.html" target="computer">fifteen</a>,
-you return to <a href="0.html" target="computer">zero</a>.
+When you go to the next page from <a href="/bbbb/f.html" target="computer">fifteen</a>,
+you return to <a href="/bbbb/0.html" target="computer">zero</a>.
 This phenomenon is called overflow, and although its a sharp departure from
 mathematics, it is eminently useful for computers.
 
 # Negative numbers
 
-That usefulness is more obvious when you flip back from <a href="0.html"
-target="computer">0</a> back to <a href="f.html" target="computer">F</a>.
+That usefulness is more obvious when you flip back from <a href="/bbbb/0.html"
+target="computer">0</a> back to <a href="/bbbb/f.html" target="computer">F</a>.
 Recall that going back a page is equivalent to subtracting one, or
 decrementing.
 So, you can say in good conscience that, in a four bit register, 0xF is
@@ -229,8 +228,8 @@ Complement](https://en.wikipedia.org/wiki/Two%27s_complement),
 where we treat the low half of the expressible numbers as positive,
 and ironically reserve all the numbers above that for negatives,
 but in reverse order.
-So, if you turn four pages back from <a href="4.html" target="computer">0</a>,
-you are on page -4, which happens to be <a href="c.html"
+So, if you turn four pages back from <a href="/bbbb/4.html" target="computer">0</a>,
+you are on page -4, which happens to be <a href="/bbbb/c.html"
 target="computer">`0xC`</a>.
 A nice property of this system is that every negative number has set the
 <strong>most significant bit</strong>.
@@ -242,8 +241,8 @@ article titled <em>A Hexadecimal Pronunciation Guide</em> from <em>Datamation
 Magazine, Volume 14</em> by Robert A. Magnusen in 1968.
 This long-lost naming scheme was both sensible and rife with puns.
 
-Magnusen proposed that the numbers <a href="a.html" target="computer">10</a> to
-<a href="f.html" target="computer">15</a> be named <strong>anna</strong>, bet,
+Magnusen proposed that the numbers <a href="/bbbb/a.html" target="computer">10</a> to
+<a href="/bbbb/f.html" target="computer">15</a> be named <strong>anna</strong>, bet,
 <strong>chris</strong>, <strong>dot</strong>, <strong>ernest</strong>, and
 <strong>frost</strong>.  It naturally follows that 0xB0 is
 <strong>betty</strong> and 0x1C is <strong>christeen</strong>.
@@ -263,26 +262,26 @@ We’ve already visited names of number systems, like <strong>binary</strong>.
 You can use these roots to name arbitrary number systems, like <strong>quaternary</strong>.
 They also make words like <strong>octagon</strong> and <strong>triangle</strong>
 
-* <a href="0.html" target="computer">null</a>,
-* <a href="1.html" target="computer">un-</a>,
-* <a href="2.html" target="computer">bi-</a>,
-* <a href="3.html" target="computer">tres-</a>,
-* <a href="4.html" target="computer">quad-, quat-</a>,
-* <a href="5.html" target="computer">quint-</a>, <em>&</em>
+* <a href="/bbbb/0.html" target="computer">null</a>,
+* <a href="/bbbb/1.html" target="computer">un-</a>,
+* <a href="/bbbb/2.html" target="computer">bi-</a>,
+* <a href="/bbbb/3.html" target="computer">tres-</a>,
+* <a href="/bbbb/4.html" target="computer">quad-, quat-</a>,
+* <a href="/bbbb/5.html" target="computer">quint-</a>, <em>&</em>
 * <em>cetera</em>
 
 English uses the Greek roots for words like <strong>monochrome</strong> for <a
-href="1.html" target="computer">one</a> color, <strong>pentagon</strong> for a
-shape with <a href="5.html" target="computer">five</a> sides and
-<strong>tesseract</strong>, a shape with <a href="4.html"
+href="/bbbb/1.html" target="computer">one</a> color, <strong>pentagon</strong> for a
+shape with <a href="/bbbb/5.html" target="computer">five</a> sides and
+<strong>tesseract</strong>, a shape with <a href="/bbbb/4.html"
 target="computer">four</a> dimensions.
 
-* <a href="0.html" target="computer">null</a>,
-* <a href="1.html" target="computer">un-</a>,
-* <a href="2.html" target="computer">bi-</a>,
-* <a href="3.html" target="computer">tres-</a>,
-* <a href="4.html" target="computer">quad-, quat-</a>,
-* <a href="5.html" target="computer">quint-</a>, <em>kai</em>
+* <a href="/bbbb/0.html" target="computer">null</a>,
+* <a href="/bbbb/1.html" target="computer">un-</a>,
+* <a href="/bbbb/2.html" target="computer">bi-</a>,
+* <a href="/bbbb/3.html" target="computer">tres-</a>,
+* <a href="/bbbb/4.html" target="computer">quad-, quat-</a>,
+* <a href="/bbbb/5.html" target="computer">quint-</a>, <em>kai</em>
 * <em>ta loipa</em>
 
 English uses these roots in all manner of inconsistent and nonsensical ways
@@ -333,22 +332,22 @@ value is a mere counting of thorpes.
 
 The binary numerals are:
 
-* <a href="0.html" target="computer">&nbsp;</a>
-* <a href="1.html" target="computer">I</a>
-* <a href="2.html" target="computer">V</a>
-* <a href="3.html" target="computer">VI</a>
-* <a href="4.html" target="computer">X</a>
-* <a href="5.html" target="computer">XI</a>
-* <a href="6.html" target="computer">XV</a>
-* <a href="7.html" target="computer">XVI</a>
-* <a href="8.html" target="computer">#</a>
-* <a href="9.html" target="computer">#I</a>
-* <a href="a.html" target="computer">#V</a>
-* <a href="b.html" target="computer">#VI</a>
-* <a href="c.html" target="computer">#X</a>
-* <a href="d.html" target="computer">#XI</a>
-* <a href="e.html" target="computer">#XV</a>
-* <a href="f.html" target="computer">#XVI</a>
+* <a href="/bbbb/0.html" target="computer">&nbsp;</a>
+* <a href="/bbbb/1.html" target="computer">I</a>
+* <a href="/bbbb/2.html" target="computer">V</a>
+* <a href="/bbbb/3.html" target="computer">VI</a>
+* <a href="/bbbb/4.html" target="computer">X</a>
+* <a href="/bbbb/5.html" target="computer">XI</a>
+* <a href="/bbbb/6.html" target="computer">XV</a>
+* <a href="/bbbb/7.html" target="computer">XVI</a>
+* <a href="/bbbb/8.html" target="computer">#</a>
+* <a href="/bbbb/9.html" target="computer">#I</a>
+* <a href="/bbbb/a.html" target="computer">#V</a>
+* <a href="/bbbb/b.html" target="computer">#VI</a>
+* <a href="/bbbb/c.html" target="computer">#X</a>
+* <a href="/bbbb/d.html" target="computer">#XI</a>
+* <a href="/bbbb/e.html" target="computer">#XV</a>
+* <a href="/bbbb/f.html" target="computer">#XVI</a>
 
 This representation highlights property unique to binary numerals.
 Because the only possible values of a digit are 0 or 1, the ommission of a
