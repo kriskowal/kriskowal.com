@@ -159,12 +159,12 @@ The hexadecimal digits are
 <a href="/bbbb/7.html" target="computer">7</a>,
 <a href="/bbbb/8.html" target="computer">8</a>,
 <a href="/bbbb/9.html" target="computer">9</a>,
-<a href="/bbbb/A.html" target="computer">A</a>,
-<a href="/bbbb/B.html" target="computer">B</a>,
-<a href="/bbbb/C.html" target="computer">C</a>,
-<a href="/bbbb/D.html" target="computer">D</a>,
-<a href="/bbbb/E.html" target="computer">E</a>, and
-<a href="/bbbb/F.html" target="computer">F</a>.
+<a href="/bbbb/a.html" target="computer">A</a>,
+<a href="/bbbb/b.html" target="computer">B</a>,
+<a href="/bbbb/c.html" target="computer">C</a>,
+<a href="/bbbb/d.html" target="computer">D</a>,
+<a href="/bbbb/e.html" target="computer">E</a>, and
+<a href="/bbbb/f.html" target="computer">F</a>.
 So, the largest expressible number in a byte is 255 and we write that as
 `0xFF`.
 
