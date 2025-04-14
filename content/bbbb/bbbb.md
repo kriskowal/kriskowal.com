@@ -203,36 +203,8 @@ A strange thing happens when the four bit number runs out of bits.
 When you go to the next page from <a href="/bbbb/f.html" target="computer">fifteen</a>,
 you return to <a href="/bbbb/0.html" target="computer">zero</a>.
 This phenomenon is called overflow, and although its a sharp departure from
-mathematics, it is eminently useful for computers.
-
-# Negative numbers
-
-That usefulness is more obvious when you flip back from <a href="/bbbb/0.html"
-target="computer">0</a> back to <a href="/bbbb/f.html" target="computer">F</a>.
-Recall that going back a page is equivalent to subtracting one, or
-decrementing.
-So, you can say in good conscience that, in a four bit register, 0xF is
-equivalent to -1.
-In a byte, 0xFF is equivalent to -1.
-The numbers `0xFFFF`, `0xFFFF_FFFF`, and `0xFFFF_FFFF__FFFF_FFFF` each
-represent -1 for registers twice as wide, <em>ad nauseam</em>.
-
-(The underscores, “`_`”, work like commas in decimal numbers, to visually group
-digits.
-Some would argue that 1,000,000 is a number in <strong>thosandal</strong>, a
-number system with 1,000 expressible digits separated by commas.)
-
-So, for computers to represent positive and negative integers,
-the dominant representation is [Two's
-Complement](https://en.wikipedia.org/wiki/Two%27s_complement),
-where we treat the low half of the expressible numbers as positive,
-and ironically reserve all the numbers above that for negatives,
-but in reverse order.
-So, if you turn four pages back from <a href="/bbbb/4.html" target="computer">0</a>,
-you are on page -4, which happens to be <a href="/bbbb/c.html"
-target="computer">`0xC`</a>.
-A nice property of this system is that every negative number has set the
-<strong>most significant bit</strong>.
+mathematics, it is eminently useful for computers because integer addition can
+use the exact same circuitry as subtraction.
 
 # Hexadecimal pronunciation
 
