@@ -22,6 +22,8 @@ It looks like this interactive version.
 
 <iframe name="computer" src="/bbbb/f.html" scrolling="no" style="position: sticky; position: -webkit-sticky; top: 10px; padding: 0; margin: 0; left: calc(50% - min(25vh, 50%)); width: calc(min(50vh, 100%)); aspect-ratio: 616.80365 / 566.70001; overflow: hidden; border: dotted 1px black; border-radius: 30px; background-color: white"></iframe>
 
+<div style="text-align: center"><a href="/bbbb/0.html">full page</a></div>
+
 What follows is an explanation for parents and lifelong learners.
 
 # Digits
