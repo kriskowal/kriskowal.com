@@ -16,8 +16,8 @@ I am not yet selling physical copies, but the
 is cheap and
 [*Pint Size Productions*](https://customboardbooks.pintsizeproductions.com/product/Kris-Kowal-16-Page-Board-Book)
 can print one out for you on demand and ships within the United States.
-We produced a [monochrome first edition](/bbbb/2020/) for our first child.
-This colorful second edition with more information commemorates our second.
+We produced a [monochrome 1st edition](/bbbb/2020/) for our first child.
+This colorful 10nd edition with more information commemorates our second.
 It looks like this interactive version.
 
 <iframe name="computer" src="/bbbb/f.html" scrolling="no" style="position: sticky; position: -webkit-sticky; top: 10px; padding: 0; margin: 0; left: calc(50% - min(25vh, 50%)); width: calc(min(50vh, 100%)); aspect-ratio: 616.80365 / 566.70001; overflow: hidden; border: dotted 1px black; border-radius: 30px; background-color: white"></iframe>
