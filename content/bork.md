@@ -9,13 +9,13 @@ date: 2025-04-21
 
 <p><iframe name="computer" src="https://borkborkborkbork.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html" scrolling="no" style="zoom: 75%; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; border: none"></iframe></p>
 
-<p style="text-align: center"><a href="https://borkborkborkbork.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html">full page</a></p>
+<p style="text-align: center"><a href="https://borkborkborkbork.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html">borkborkborkbork.com</a></p>
 
 In the Before Times, [Corbin](https://github.com/jcorbin),
-[Rix](https://arcology.garden), [Tor](), and I
-were so energized by [Roguelike Celebration](https://www.roguelike.club/), we
-swore a oath in the presence of Github's Octocat that we would
-make a Roguelike and talk about it at a future Roguelike.
+[Rix](https://arcology.garden), [Tor](https://torwegia.io/), and I were so
+energized by [Roguelike Celebration](https://www.roguelike.club/), we swore a
+oath in the presence of Github's Octocat that we would make a Roguelike and
+talk about it at a future Roguelike.
 To that end we have done much and achieved little.
 But, as we understand it, striving to make games that nobody in their right
 mind would willingly play is not only common but customary and arguably
