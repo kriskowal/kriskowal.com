@@ -7,7 +7,7 @@ tags:
 date: 2025-04-21
 ---
 
-<p><iframe name="computer" src="http://bork.kriskowal.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html" scrolling="no" style="zoom: 75%; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; border: none"></iframe></p>
+<p><iframe name="computer" src="https://bork.kriskowal.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html" scrolling="no" style="zoom: 75%; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; border: none"></iframe></p>
 
 <p style="text-align: center"><a href="https://bork.kriskowal.com/f88eefde53a30e538cee81ea314c1ebe258e0a8a146d6d454c2f2b2145cb7479.html">full page</a></p>
 
