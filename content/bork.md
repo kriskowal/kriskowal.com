@@ -35,9 +35,14 @@ This is not that game.
 We informally incorporated the [BØRKSHOP](https://github.com/borkshop/) and
 proceded to play a great deal of Minecraft.
 
-But, over the course of these many years, we made many other things.
-We wrote half of [ANSI bindings for Go](https://github.com/kriskowal/cops), [at
-least twice](https://github.com/jcorbin/anansi).
+Over the course of these many years, we made many other things.
+Most notably, Rix shipped a Roguelike for the [2024 Autumn Lisp Game
+Jam](https://itch.io/jam/autumn-lisp-game-jam-2024) called [Autumn
+Rally](https://aes256thetic.itch.io/autumn-rally)!
+
+Along the way, we wrote half of [ANSI bindings for
+Go](https://github.com/kriskowal/cops), [at least
+twice](https://github.com/jcorbin/anansi).
 We discovered that terminals can’t do emojis reliably.
 We wrote half of [Emoji Quest](https://emojiquest.app/), [at least
 twice](https://github.com/borkshop/lobsterquest).
