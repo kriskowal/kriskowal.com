@@ -38,7 +38,9 @@ proceded to play a great deal of Minecraft.
 Over the course of these many years, we made many other things.
 Most notably, Rix shipped a Roguelike for the [2024 Autumn Lisp Game
 Jam](https://itch.io/jam/autumn-lisp-game-jam-2024) called [Autumn
-Rally](https://aes256thetic.itch.io/autumn-rally)!
+Rally](https://aes256thetic.itch.io/autumn-rally) and we were joined by
+[Joe](https://www.wobscale.lol/) who brought his [Blaseball story to Roguelike
+Celebration](https://youtu.be/WeRCGy3-uPY?si=dtpg0plE6ZYCMDz5).
 
 Along the way, we wrote half of [ANSI bindings for
 Go](https://github.com/kriskowal/cops), [at least
