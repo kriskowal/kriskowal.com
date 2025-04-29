@@ -12,3 +12,5 @@ I am leading the software development of [Endo](/endo) at
 I seek to make a web platform that works for its users and empowers individuals
 to share with and serve each other, without the imposition of [false
 rents](/giants) like unavoidable advertising or surveilance.
+
+This is my [now page](http://nownownow.com).
