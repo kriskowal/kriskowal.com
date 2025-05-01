@@ -20,7 +20,7 @@ We produced a [monochrome 1st edition](/bbbb/2020/) for our first child.
 This colorful 10nd edition with more information commemorates our second.
 It looks like this interactive version.
 
-<iframe name="computer" src="/bbbb/f.html" scrolling="no" style="padding: 0; margin: 0; left: calc(50% - min(25vh, 50%)); width: calc(min(50vh, 100%)); aspect-ratio: 616.80365 / 566.70001; overflow: hidden; border: dotted 1px black; border-radius: 30px; background-color: white"></iframe>
+<iframe name="computer" src="/bbbb/f.html" scrolling="no" style="display: relative; padding: 0; margin: 0; left: calc(50% - min(25vh, 50%)); width: calc(min(50vh, 100%)); aspect-ratio: 616.80365 / 566.70001; overflow: hidden; border: dotted 1px black; border-radius: 30px; background-color: white"></iframe>
 
 <div style="text-align: center"><a href="/bbbb/0.html">full page</a></div>
 
