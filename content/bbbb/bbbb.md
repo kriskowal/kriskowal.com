@@ -97,7 +97,7 @@ more fun.
 The <strong>sexages-</strong> in sexagesimal means <strong>sixty</strong>.)
 
 As with decimal, the last bit of a binary number stands for the value of one.
-The <strong>place value</strong> of ever other bit is twice as much
+The <strong>place value</strong> of every other bit is twice as much
 as the bit to its right.
 
 So, each switch, when on, stands for <strong style="color: rgb(0, 130,
