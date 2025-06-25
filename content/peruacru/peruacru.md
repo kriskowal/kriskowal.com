@@ -10,7 +10,7 @@ date: 2019-07-01
 
 {% image "./peruacru.png", "A banner for the game Peruacru, depicting a pumpkin hut, a paper airplane, and a volcano." %}
 
-[Escape from Peruácru Island](https://peruacru.then.land/) is a short
+[Escape from Peruácru Island](https://peruacru.kriskowal.com/) is a short
 interactive adventure on a tropical island in a child’ imagination.
 The game is [open source](https://github.com/kriskowal/peruacru) and uses the
 bespoke [Kni](https://github.com/borkshop/kni) JavaScript interactive fiction
