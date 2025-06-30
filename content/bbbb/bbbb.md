@@ -296,8 +296,9 @@ of never confusing British bean counters or American weights and measures.
 It also suggests that X is a <strong>quadrathorpe</strong>.
 V is arguably a <strong>bithorpe</strong> and I an <strong>unthorpe</strong>,
 but I will concede that this is a stretch.
-It can be much more convincingly argued that - is a bithorpe, ⨉ is a
-quadrathorpe, and asterisk * is a hexathorpe.
+It can be much more convincingly argued that - is a bithorpe, × is a
+quadrathorpe, and asterisk * might either be a pentathorpe or hexathorpe
+depending on your life choices.
 A simple thorpe is a thing of myth and legend.
 
 Regardless, it follows that Binary Roman numerals represent a four-bit binary
