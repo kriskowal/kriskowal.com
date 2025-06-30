@@ -43,7 +43,7 @@ So, if you multiply each digit by its <strong>place value</strong>
 and add those numbers up, that is the value of the whole number.
 
 > 123   
-> 1⨉100 + 2⨉10 + 3⨉1    
+> 1×100 + 2×10 + 3×1    
 > 300 + 20 + 1
 
 All of the wonderous utility and complexity of expression and communication
