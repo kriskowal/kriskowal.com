@@ -173,6 +173,32 @@ G in GIF as if I were Dutch and the Ph in JPEG like “photograph”.
 Bake some ambiguity into your name's pronunciation and I'll find the third
 interpretation and socialize it at your favorite conference.
 
+# Map and Set
+
+The names map and set are cursed.
+They occur in the same group of words both as nouns and as verbs.
+`Map` is an interface with methods like `get` and `set`.
+`Set` is an interface with methods like `add` and `delete`.
+Lists often have a method like `map`.
+`Map` is not `map`, and `Set` is not `set`.
+So, keep in mind that that the case of a word is information and that names
+cannot be trivially moved from one case convention to another.
+
+You will note that `Map` methods tend to have three letters.
+If “funny” were again more important than the preceding laws of naming things,
+you might conceive of a convention for maps that used strictly three-letter
+names: `get`, `set`, and `has`, of course.
+We can use `put` as a variant on `set` that asserts that the key is not
+present.
+We can use `cut` as an analog to `pop` for removing and returning the value for
+a key.
+We often wring our hands for a good name for a method that gets the value for a
+key, but also sets the value to a default it was not already present.
+My muse is the idiom, “ready, get set, go!”, which can be captured in three
+letters as initials, `rgs`.
+
+But that would be crazy.
+
 # Brand Names
 
 Brand names do not follow the laws of naming things in computer science.
