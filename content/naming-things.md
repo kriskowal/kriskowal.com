@@ -14,7 +14,7 @@ invalidation, naming things, and off-by-one errors.
 
 Arguably, naming things is the hardest because there's an _element_ of
 subjectivity.
-Cache invalidation is hard because of complexity, but is at least incoherence
+Cache invalidation is hard because of complexity, but at least incoherence
 is objectively measurable.
 Off-by-one errors are as easy to fix as they are to make, only hard to reliably
 avoid.
