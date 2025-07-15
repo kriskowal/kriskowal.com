@@ -6,6 +6,7 @@ tags:
 - posts
 - JavaScript
 - Software Design
+- Programming
 date: 2011-05-10
 ---
 

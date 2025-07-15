@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - posts
 - JISH
+- Programming
 date: 2024-03-30
 ---
 

@@ -3,6 +3,7 @@ title: Holiday Bash
 layout: layouts/post.njk
 tags:
 - Yuletide
+- Programming
 - Art
 - posts
 date: 2008-12-12

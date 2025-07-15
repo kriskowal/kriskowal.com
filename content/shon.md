@@ -4,6 +4,7 @@ layout: layouts/post.njk
 tags:
 - posts
 - home
+- Programming
 date: 2015-09-29
 ---
 
