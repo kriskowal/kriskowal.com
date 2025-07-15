@@ -278,6 +278,9 @@ necessary.
 Prefer `length` over `getLength`, especially if you have the option
 of making it a computed property.
 
+The dual of `get` is `set`.
+Accept no substitutes.
+
 # And so on
 
 Consider this a living document.
