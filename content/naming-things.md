@@ -209,6 +209,17 @@ These are all available options:
 Camel case is ambiguous.
 Be specific.
 
+Avoid `runoncase`.
+You will, in the fullness of time, encounter real combinations of terms with
+meaningful semanticic differences depending on the place of the invisible
+delimiter.
+For example, `beans-owing` versus `bean-sowing` is a very real example.
+
+Notably, Golang sets a strong precedent for `runoncase` for package names.
+The precedent is stronger than this rule.
+But, you can trivially avoid names with undelimited terms, either by using
+single words, or vestigial intermediate directories.
+
 This is not arguable: if a file name might appear in an HTTP request, that name
 is in kebab-case.
 That includes any JavaScript module specifier.
