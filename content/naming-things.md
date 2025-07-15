@@ -184,6 +184,8 @@ Lists often have a method like `map`.
 So, keep in mind that that the case of a word is information and that names
 cannot be trivially moved from one case convention to another.
 
+# The column alignment gag
+
 You will note that `Map` methods tend to have three letters.
 If “funny” were again more important than the preceding laws of naming things,
 you might conceive of a convention for maps that used strictly three-letter
@@ -198,6 +200,16 @@ My muse is the idiom, “ready, get set, go!”, which can be captured in three
 letters as initials, `rgs`.
 
 But that would be crazy.
+
+Less crazy than the precedent set for naming operators in Perl.
+Someday, the JavaScript community will have to establish a protocol for
+comparison methods.
+I am aware that they will be obligated to follow Java and name the methods like
+`equals` and `lessThan`.
+Down that way lies `lessThanOrEqual`, which will be a disappointment, when we
+could have had `eq`, `ne`, `lt`, `gt`, `le` and `ge`.
+Oh, well.
+At least we won’t have to settle for aberrations that serve no-one like `lte`.
 
 # Brand Names
 
