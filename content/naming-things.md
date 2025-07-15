@@ -47,6 +47,12 @@ Don’t make me guess whether or how you abbreviated or contracted a name, or if
 you elided every other vowel.
 Do not make me guess.
 
+These laws, like the [robot
+laws](https://en.wikipedia.org/wiki/Three_Laws_of_Robotics)
+are in order of precedence.
+A [hat trick](https://en.wikipedia.org/wiki/Hat-trick) in naming things is a
+rare cause for celebration.
+
 Also, names do not appear in isolation.
 The best names participate in systems of names.
 
