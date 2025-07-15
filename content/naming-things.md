@@ -64,22 +64,28 @@ The **Laws of Systems of Names in Computer Science** are,
   should exist and have the implied relationship.
   **Choose coherently.**
 
-  That is, don't name something `kiki` unless you know what would be `bouba`.
-  If something is named `up`, there should be a `down`.
-  If clockwise is `deosil`, then counter-clockwise is `widdershins`.
-  If you need one dimension, `left` and `right` will do; whereas if you need
-  two dimensions, `north`, `east`, `south`, and `west` are there for you.
+That is, don't name something `kiki` unless you know what would be `bouba`.
+If something is named `up`, there should be a `down`.
+If clockwise is `deosil`, then counter-clockwise is `widdershins`.
+If you need one dimension, `left` and `right` will do; whereas if you need
+two dimensions, `north`, `east`, `south`, and `west` are there for you.
 
-  If you have a bunch of shapes like `hexagon`, `septagon`, and `octogon`,
-  so help me, the next one better be an
-  [`enneagon`](https://en.wikipedia.org/wiki/Nonagon).
-  Nonagon does not belong in the company of Greeks.
-  Also, triangles are trigons.
-  Don’t get me started.
+If you have a bunch of shapes like `hexagon`, `septagon`, and `octogon`,
+so help me, the next one better be an
+[`enneagon`](https://en.wikipedia.org/wiki/Nonagon).
+Nonagon does not belong in the company of Greeks.
+Also, triangles are trigons.
+Don’t get me started.
+
+Your language or its standard library has chosen many names already and
+you are obligated to choose names that are coherent with the body
+of established precedent.
 
 Do not mix metaphors.
 The inverse of `install` is `uninstall`.
-The inverse of `add` is `remove`.
+The inverse of `add` is `remove` or `delete`, and that precedent has almost
+certainly been set.
+
 I will personally haunt you if you cross `begin` with `finish`.
 The opposite of `begin` is `end`.
 The opposite of `start` is `finish`.
@@ -102,6 +108,11 @@ I recommend choosing one of these pairs for nouns and use an entirely
 different group for verbs.
 The tape deck metaphor would give you `replay` and `skip` and provide
 verbs like `play`, `pause`, and `seek` if you ever need them.
+
+It is _sometimes_ okay to beg a fine distinction between groups of words
+or to make arbitrary choices about how these words are grouped.
+There are cases where we need more words than there are distinct meanings.
+So, if you find you need two flavors of ends…
 
 # On Deque
 
