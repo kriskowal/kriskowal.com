@@ -37,7 +37,7 @@ Let the problem bother you for a bit.
 
 The **Three Laws of Naming in Computer Science** are,
 
-0. The name must describe the thing and no other thing.
+0. The name must describe the thing.
 1. The name will ideally describe no other thing.
 2. The name is among the shortest of all concise names, and no shorter.
 3. The name is the funniest of short, concise names.
