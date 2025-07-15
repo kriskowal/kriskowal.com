@@ -184,7 +184,7 @@ Lists often have a method like `map`.
 So, keep in mind that that the case of a word is information and that names
 cannot be trivially moved from one case convention to another.
 
-# The column alignment gag
+# The monospace gag
 
 You will note that `Map` methods tend to have three letters.
 If “funny” were again more important than the preceding laws of naming things,
