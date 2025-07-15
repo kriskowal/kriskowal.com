@@ -95,9 +95,10 @@ down.
 You might be tempted to use `begin` and `end` for nouns and `start` with
 `finish` for verbs.
 These are not different enough to be distinct.
-I recommend choosing one of these pairs for nouns and move to an entirely like
-`replay` and `skip` from the tape deck with `play`, `pause`, and `seek` verbs
-too.
+I recommend choosing one of these pairs for nouns and use an entirely
+different group for verbs.
+The tape deck metaphor would give you `replay` and `skip` and provide
+verbs like `play`, `pause`, and `seek` if you ever need them.
 
 # On Deque
 
@@ -198,7 +199,7 @@ Just follow it.
 
 A name may consist of one or more terms.
 Those terms may themselves be initialisms and acronyms.
-Case conventions like `DromedaryCase` and `BactrianCase`
+Case conventions like `dromedaryCase` and `BactrianCase`
 use capitalization to indicate the boundary between terms.
 You must only, ever capitalize the first letter of an initialism
 in either of these case conventions.
