@@ -109,9 +109,16 @@ different group for verbs.
 The tape deck metaphor would give you `replay` and `skip` and provide
 verbs like `play`, `pause`, and `seek` if you ever need them.
 
+There are precedents across language boundaries for using the words `promise`,
+`future`, and `deferred` to variously refer to similar devices.
+Use the prevailing convention, but if there isn’t a precedent, pick one.
+But, if you need another similar thing, pick a different word entirely
+that captures the distinction, like `signal` or `observable`.
+
 It is _sometimes_ okay to beg a fine distinction between groups of words
 or to make arbitrary choices about how these words are grouped.
 There are cases where we need more words than there are distinct meanings.
+
 So, if you find you need two flavors of ends…
 
 # On Deque
