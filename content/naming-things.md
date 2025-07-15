@@ -289,5 +289,16 @@ Accept no substitutes.
 
 # And so on
 
+The purpose of these rules is to replicate your system of naming through
+osmosis so that your fellow readers and writers can infer what a name means and
+what name they can use to extend your system in a way you will immediately and
+intuitively understand.
+This is about paving the way for working fluidly with your team or community.
+
+Choosing good names is a skill much like kindness.
+They are both ultimately thoughtfulness, and can be obtained with little more
+than caring enough to think a little more, and that investment compounds
+non-linearly with practice.
+
 Consider this a living document.
 Come again soon.
