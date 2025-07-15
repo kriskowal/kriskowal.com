@@ -42,13 +42,13 @@ The **Three Laws of Naming in Computer Science** are,
 2. The name is among the shortest of all concise names, and no shorter.
 3. The name is the funniest of short, concise names.
 
-Also, names do not appear in isolation.
-The best names participate in systems of names.
-
-Abbreviations are inevitably ambiguous.
+Corollary: Abbreviations are inevitably ambiguous.
 Don’t make me guess whether or how you abbreviated or contracted a name, or if
 you elided every other vowel.
 Do not make me guess.
+
+Also, names do not appear in isolation.
+The best names participate in systems of names.
 
 # The Laws of Systems of Names in Computer Science
 
