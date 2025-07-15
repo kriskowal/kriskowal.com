@@ -51,7 +51,7 @@ These laws, like the [robot
 laws](https://en.wikipedia.org/wiki/Three_Laws_of_Robotics)
 are in order of precedence.
 A [hat trick](https://en.wikipedia.org/wiki/Hat-trick) in naming things is a
-rare cause for celebration.
+cause for celebration.
 
 Also, names do not appear in isolation.
 The best names participate in systems of names.
@@ -177,7 +177,7 @@ interpretation and socialize it at your favorite conference.
 
 Brand names do not follow the laws of naming things in computer science.
 You will probably have to resort to ten indecent tricks to find a name that is
-available and memorable.
+short, available, and memorable.
 You may name your project with a brand name.
 Your project must have exactly one brand name.
 You must not create a system of brand names inside your project.
