@@ -251,6 +251,22 @@ I am aware that you find this distasteful.
 Let’s agree not to have this argument.
 Identifier is spelled “identifier”.
 
+# Get
+
+The verb `get` implies that a function is read-only and has no _observable,
+semantic_ side effects.
+Do not break this expectation.
+The get methods of splay trees may cause internal mutation that affects
+the timing of subsequent operations, but these side effects fall under
+the _observable_ or _semantic_ exceptions to the rule.
+
+But, if the `get` qualifier does nothing to change the meaning of a compound
+name, and if you are not writing in a sysem with a strong prevailing convention
+for `get` methods like Java, sometimes `get` just makes a name longer than
+necessary.
+Prefer `length` over `getLength`, especially if you have the option
+of making it a computed property.
+
 # And so on
 
 Consider this a living document.
