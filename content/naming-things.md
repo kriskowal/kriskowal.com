@@ -54,15 +54,15 @@ The best names participate in systems of names.
 
 The **Laws of Systems of Names in Computer Science** are,
 
-- Every public name establishes a precedent and can thereafter never change.
-  **Choose wisely.**
+1. Every public name establishes a precedent and can thereafter never change.
+   **Choose wisely.**
 
-- A system of names must not contain any synonyms.
-  **Choose one.**
+2. A system of names must not contain any synonyms.
+   **Choose one.**
 
-- If the name of a thing has an antonym or dual, a thing with the other name
-  should exist and have the implied relationship.
-  **Choose coherently.**
+3. If the name of a thing has an antonym or dual, a thing with the other name
+   should exist and have the implied relationship.
+   **Choose coherently.**
 
 That is, don't name something `kiki` unless you know what would be `bouba`.
 If something is named `up`, there should be a `down`.
