@@ -77,6 +77,9 @@ The **Laws of Systems of Names in Computer Science** are,
   Also, triangles are trigons.
   Don’t get me started.
 
+Do not mix metaphors.
+The inverse of `install` is `uninstall`.
+The inverse of `add` is `remove`.
 I will personally haunt you if you cross `begin` with `finish`.
 The opposite of `begin` is `end`.
 The opposite of `start` is `finish`.
