@@ -101,11 +101,11 @@ The opposite of `start` is `finish`.
 > Similar things should be the same or different.
 > — Alan Kay
 
-I have had the pleasure of working with [Mark S.
+(I have had the pleasure of working with [Mark S.
 Miller](https://en.wikipedia.org/wiki/Mark_S._Miller) who in turn had the
 pleasure of working with [Alan Kay](https://en.wikipedia.org/wiki/Alan_Kay) so
 occasionally remembers things people have said that may never have been written
-down.
+down.)
 
 You might be tempted to use `begin` and `end` for nouns and `start` with
 `finish` for verbs.
