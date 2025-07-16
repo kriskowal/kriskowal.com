@@ -201,7 +201,7 @@ letters as initials, `rgs`.
 
 But that would be crazy.
 
-Less crazy than the precedent set for naming operators in Perl.
+Less crazy than the precedent set for naming operators in shell scripts.
 Someday, the JavaScript community will have to establish a protocol for
 comparison methods.
 I am aware that they will be obligated to follow Java and name the methods like
