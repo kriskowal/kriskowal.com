@@ -301,11 +301,12 @@ For example, `v1_2_3`.
 
 # Identifer
 
-If you follow the inviolable laws above, regardless of whether you believe that ID
-is somehow an initialism for “identifier” (it’s not), you will be compelled
-to spell it as `Id` in `BactrianCase`.
-I am aware that you find this distasteful.
-Let’s agree not to have this argument.
+If you still believe that the initialism ID is somehow an abbreviation of
+“identifier”, you may wish to skip ahead and preserve your frail innocence.
+The initialism ID stands for [Identity
+Document](https://en.wikipedia.org/wiki/Identity_document) and has no business
+in your table’s column names or your language’s grammar.
+The dual of Id is Ego.
 Identifier is spelled “identifier”.
 
 # Get
