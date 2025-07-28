@@ -198,11 +198,10 @@ We often wring our hands for a good name for a method that gets the value for a
 key, but also sets the value to a default it was not already present.
 My muse is the idiom, “on your mark, ready, set, go!”, which can be
 captured in three letters as initials, `oym` and `rsg`.
-Lamentably, JavaScript has run with the verbose but absolutely appropriate and
-righteous [`getOrInsert` and
-`getOrInsertComputed`](https://tc39.es/proposal-upsert/).
 
 But that would be crazy.
+JavaScript has run with the verbose but absolutely appropriate and righteous
+[`getOrInsert` and `getOrInsertComputed`](https://tc39.es/proposal-upsert/).
 
 Less crazy than the precedent set for naming operators in shell scripts.
 Someday, the JavaScript community will have to establish a protocol for
