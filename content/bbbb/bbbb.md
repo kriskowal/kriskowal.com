@@ -8,6 +8,9 @@ tags:
 date: 2025-04-06
 ---
 
+<p style="margin: 2em; text-align: center"><a href="https://www.amazon.com/dp/B0F9VCF3TN"><strong>Basic Binary Board Book</strong> is available for purchase on Amazon!</a></p>
+
+<!--
 The
 [Basic Binary Board Book](https://www.patreon.com/kriskowal/shop/babys-basic-binary-board-book-1424682)
 is for small people who aspire to one day count in binary from 0 to F.
@@ -19,6 +22,7 @@ can print one out for you on demand and ships within the United States.
 We produced a [monochrome 1st edition](/bbbb/2020/) for our first child.
 This colorful 10nd edition with more information commemorates our second.
 It looks like this interactive version.
+-->
 
 <iframe name="computer" src="/bbbb/f.html" scrolling="no" style="position: relative; padding: 0; margin: 0; left: calc(50% - min(25vh, 50%)); width: calc(min(50vh, 100%)); aspect-ratio: 616.80365 / 566.70001; overflow: hidden; border: dotted 1px black; border-radius: 30px; background-color: white"></iframe>
 
