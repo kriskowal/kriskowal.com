@@ -4,6 +4,9 @@ layout: layouts/post.njk
 tags:
 - home
 - posts
+also:
+- slugs/bbbb.html
+- slugs/peruacru.html
 date: 2008-10-05
 ---
 

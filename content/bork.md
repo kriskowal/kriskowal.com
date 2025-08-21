@@ -4,6 +4,11 @@ layout: layouts/post.njk
 tags:
 - posts
 - home
+also:
+- slugs/bbbb.html
+- slugs/peruacru.html
+- slugs/3rings.html
+- slugs/tengwar.html
 date: 2025-04-21
 ---
 

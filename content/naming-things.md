@@ -5,6 +5,8 @@ tags:
 - posts
 - Programming
 - Software Design
+also:
+- slugs/bbbb.html
 date: 2025-07-14
 ---
 

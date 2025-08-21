@@ -3,6 +3,10 @@ title: Uber to Agoric
 layout: layouts/post.njk
 tags:
 - posts
+also:
+- slugs/hardenedjs.html
+- slugs/endo.html
+- slugs/bbbb.html
 date: 2020-04-08
 ---
 

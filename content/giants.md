@@ -4,6 +4,10 @@ layout: layouts/post.njk
 tags:
 - posts
 - home
+also:
+- slugs/bbbb.html
+- slugs/endo.html
+- slugs/hardenedjs.html
 date: 2024-02-22
 ---
 

@@ -3,6 +3,8 @@ title: Now
 layout: layouts/post.njk
 tags:
 - posts
+also:
+- slugs/bbbb.html
 date: 2025-04-29
 ---
 

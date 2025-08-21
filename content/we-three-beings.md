@@ -6,6 +6,10 @@ tags:
 - Tolkien
 - Yuletide
 - Art
+also:
+- slugs/bbbb.html
+- slugs/3rings.html
+- slugs/tengwar.html
 date: 2017-12-20
 ---
 

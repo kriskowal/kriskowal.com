@@ -5,6 +5,8 @@ tags:
 - posts
 - home
 - Programming
+also:
+- slugs/bbbb.html
 date: 2015-09-29
 ---
 

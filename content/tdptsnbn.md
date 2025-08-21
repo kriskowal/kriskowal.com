@@ -5,6 +5,8 @@ tags:
 - home
 - posts
 - Software Design
+also:
+- slugs/bbbb.html
 date: 2016-06-06
 ---
 

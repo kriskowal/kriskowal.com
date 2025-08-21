@@ -4,6 +4,10 @@ layout: layouts/post.njk
 tags:
 - posts
 - JavaScript
+also:
+- slugs/bbbb.html
+- slugs/hardenedjs.html
+- slugs/endo.html
 date: 2023-11-29
 ---
 

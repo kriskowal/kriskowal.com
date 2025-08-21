@@ -6,6 +6,11 @@ tags:
 - posts
 - Tolkien
 - Art
+also:
+- slugs/tengwar.html
+- slugs/bbbb.html
+- slugs/bork.html
+- slugs/peruacru.html
 date: 2010-09-10
 ---
 

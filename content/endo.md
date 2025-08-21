@@ -4,8 +4,13 @@ layout: layouts/post.njk
 tags:
 - posts
 - home
+also:
+- slugs/bbbb.html
+- slugs/hardenedjs.html
 date: 2024-02-23
 ---
+
+<p style="text-align: center"><img src="/endo.png" alt="Endo Logo" style="width: 20em"></p>
 
 My work at Agoric is the care and feeding of a project called
 [Endo](https://github.com/endojs/endo) that provides solutions for some

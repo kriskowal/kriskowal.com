@@ -4,6 +4,8 @@ layout: layouts/post.njk
 tags:
 - posts
 - Art
+also:
+- slugs/bbbb.html
 date: 2023-12-30
 ---
 

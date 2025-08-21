@@ -5,6 +5,11 @@ tags:
 - home
 - posts
 - Game
+also:
+- slugs/bbbb.html
+- slugs/3rings.html
+- slugs/tengwar.html
+- slugs/bork.html
 date: 2019-07-01
 ---
 

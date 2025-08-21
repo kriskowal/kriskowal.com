@@ -6,6 +6,8 @@ tags:
 - Programming
 - Art
 - posts
+also:
+- slugs/bbbb.html
 date: 2008-12-12
 ---
 

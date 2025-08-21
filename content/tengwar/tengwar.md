@@ -5,6 +5,11 @@ tags:
 - home
 - posts
 - Tolkien
+also:
+- slugs/3rings.html
+- slugs/bbbb.html
+- slugs/peruacru.html
+- slugs/bork.html
 date: 2019-10-31
 ---
 

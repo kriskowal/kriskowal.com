@@ -3,6 +3,8 @@ title: Orders of Pretentiousness
 layout: layouts/post.njk
 tags:
 - posts
+also:
+- slugs/bbbb.html
 date: 2024-04-11
 ---
 

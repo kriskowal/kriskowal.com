@@ -3,6 +3,8 @@ title: Harmony
 layout: layouts/post.njk
 tags:
 - posts
+also:
+- slugs/bbbb.html
 date: 2011-05-10
 ---
 

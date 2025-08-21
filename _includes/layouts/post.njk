@@ -1,6 +1,7 @@
 ---
 layout: layouts/base.njk
 ---
+
 {# Only include the syntax highlighter CSS on blog posts #}
 {%- css %}{% include "node_modules/prismjs/themes/prism-okaidia.css" %}{% endcss %}
 {%- css %}{% include "public/css/prism-diff.css" %}{%- endcss %}
@@ -25,4 +26,12 @@ layout: layouts/base.njk
 	{%- if nextPost %}<li>Next: <a href="{{ nextPost.url }}">{{ nextPost.data.title }}</a></li>{% endif %}
 </ul>
 {%- endif %}
+{%- endif %}
+
+{%- if also %}
+<div class="also">
+{%- for slug in also | default(["slugs/bbbb.html"]) %}
+{% include slug %}
+{%- endfor %}
+</div>
 {%- endif %}

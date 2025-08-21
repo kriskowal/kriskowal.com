@@ -4,6 +4,12 @@ layout: layouts/post.njk
 tags:
 - posts
 - Art
+also:
+- slugs/bbbb.html
+- slugs/3rings.html
+- slugs/tengwar.html
+- slugs/peruacru.html
+- slugs/bork.html
 date: 1999-01-01
 ---
 

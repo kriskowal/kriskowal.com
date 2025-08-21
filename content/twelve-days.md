@@ -6,6 +6,8 @@ tags:
 - Tolkien
 - Yuletide
 - Art
+also:
+- slugs/bbbb.html
 date: 2023-12-18
 ---
 
