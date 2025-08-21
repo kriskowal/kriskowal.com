@@ -7,6 +7,8 @@ tags:
 - JavaScript
 - Software Design
 - Programming
+also:
+- slugs/bbbb.html
 date: 2014-08-09
 ---
 

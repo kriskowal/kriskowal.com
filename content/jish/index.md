@@ -6,6 +6,8 @@ tags:
 - home
 - JISH
 - Programming
+also:
+- slugs/bbbb.html
 date: 2024-01-31
 ---
 
