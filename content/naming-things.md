@@ -358,7 +358,7 @@ JavaScript makes a distinction between `length` and `size`.
 That is, arrays have a `length` and other collections have a `size`.
 This makes sense only in JavaScript because `length` implies that an object
 participates in a protocol where individual values can be retrieved by
-index, using `protocol[index]` notation, whereas having a `size` method
+index, using `protocol[index]` notation, whereas having a `size` property
 is another duck entirely.
 The collection protocol addresses values using methods like `get`.
 If you are writing JavaScript, use the name that is _coherent_ with the
