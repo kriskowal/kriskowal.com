@@ -330,6 +330,51 @@ of making it a computed property.
 The dual of `get` is `set`.
 Accept no substitutes.
 
+# Size
+
+There are many words for _size_, and most of them correspond to a dimension or
+axis.
+
+| _number_ | _name_ | _name of size_ |
+|----------|--------|----------------|
+| 0        | _x_    | width          |
+| 1        | _y_    | length         |
+| 2        | _z_    | height         |
+| 3        | _t_    | duration       |
+
+In many languages, arrays, vectors, lists, and other ordered collections have a
+“length”, which erroneously suggests that they grow along the _y_ axis.
+This is at least coherent with the arbitrary conceit that the heap grows up and
+the stack grows down, but I assume most folks imagine arrays growing left to
+right, and two-dimensional arrays reimagining the first axis as vertical and
+the secondary axis as horizontal.
+Truth be told, there is no rhyme or reason to the names,
+and we only really need one name most of the time: the dimensionaless “size”.
+If a collection is indexed by multiple axes, each with their own size, then the
+most sensible recourse is for the size to itself be a vector and to refer to
+each dimension by its number, not its name.
+
+JavaScript makes a distinction between `length` and `size`.
+That is, arrays have a `length` and other collections have a `size`.
+This makes sense only in JavaScript because `length` implies that an object
+participates in a protocol where individual values can be retrieved by
+index, using `protocol[index]` notation, whereas having a `size` method
+is another duck entirely.
+The collection protocol addresses values using methods like `get`.
+If you are writing JavaScript, use the name that is _coherent_ with the
+precedents established by the language.
+
+In general, you are probably using a library or language that has established
+its own precedent.
+In Python, it is `len`.
+In Math, it is “cardinality”, which fails every naming rule I mention and some
+that I have not.
+Mercifully, in Golang, the conventional name is `Size`.
+In the spirit of using a naming system that is coherent and free of synonyms,
+use the prevailing convention for your language or libraries.
+
+But, if you have the liberty to establish a precedent, I recommend “size”.
+
 # And so on
 
 The purpose of these rules is to replicate your system of naming through

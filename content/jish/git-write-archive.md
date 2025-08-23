@@ -5,6 +5,8 @@ tags:
 - posts
 - JISH
 - Programming
+also:
+- slugs/bbbb.html
 date: 2024-03-30
 ---
 
