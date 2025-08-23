@@ -367,7 +367,7 @@ precedents established by the language.
 In general, you are probably using a library or language that has established
 its own precedent.
 In Python, it is `len`.
-In Math, it is “cardinality”, which fails every naming rule I mention and some
+In Math, it is “cardinality”, which fails most naming rules I mention and some
 that I have not.
 Mercifully, in Golang, the conventional name is `Size`.
 In the spirit of using a naming system that is coherent and free of synonyms,
