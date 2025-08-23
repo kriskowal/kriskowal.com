@@ -373,7 +373,8 @@ Mercifully, in Golang, the conventional name is `Size`.
 In the spirit of using a naming system that is coherent and free of synonyms,
 use the prevailing convention for your language or libraries.
 
-But, if you have the liberty to establish a precedent, I recommend “size”.
+But, if you have the liberty to establish a precedent, I recommend “size” and
+to accept no substitutes.
 
 # And so on
 
