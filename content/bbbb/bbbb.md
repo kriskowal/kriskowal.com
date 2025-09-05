@@ -339,18 +339,17 @@ So, that first 1 can be implied and doesn't require a switch.
 
 # Basic binary board book
 
-If you have gotten this far, you probably already received a copy of [<em>Basic
-Binary Board
-Book</em>](https://www.patreon.com/kriskowal/shop/babys-basic-binary-board-book-1424682),
-either because your child received it as a birthday present, or you lost at a
-White Elephant gift exchange.
+If you have gotten this far, you probably already have a copy of <em>Basic
+Binary Board Book</em> either because your child received it as a birthday
+present, or you lost at a White Elephant gift exchange.
+But — if you don’t, or you somehow have a friend or family member who doesn’t
+have ten already — I’m happy to report that the first lot of 1024 books are
+[available on Amazon](https://www.amazon.com/dp/B0F9VCF3TN)!
 
-But, I would be remiss if not to remind you that you have an opportunity to buy
-one for yourself, your child, and all their peers at the preschool or
-gradschool.
-I am not yet selling physical copies, but the
+If, by dint of a miracle, Amazon is sold out, you can get a
 [PDF](https://www.patreon.com/kriskowal/shop/babys-basic-binary-board-book-1424682)
-is cheap and
+on my Patreon and
 [*Pint Size Productions*](https://customboardbooks.pintsizeproductions.com/product/Kris-Kowal-16-Page-Board-Book)
 can print one out for you on demand and ships within the United States.
 
+<p style="margin: 2em; text-align: center"><a href="https://www.amazon.com/dp/B0F9VCF3TN"><strong>Basic Binary Board Book</strong> is available for purchase on Amazon!</a></p>
