@@ -261,7 +261,8 @@ Avoid `runoncase`.
 You will, in the fullness of time, encounter real combinations of terms with
 meaningful semanticic differences depending on the place of the invisible
 delimiter.
-For example, `beans-owing` versus `bean-sowing` is a very real example.
+The examples of `code-sign` versus `co-design` and `beans-owing` versus
+`bean-sowing` are very real and believe in you.
 
 Notably, Golang sets a strong precedent for `runoncase` for package names.
 The precedent is stronger than this rule.
