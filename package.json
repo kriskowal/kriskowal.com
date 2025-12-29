@@ -39,8 +39,7 @@
 		"@11ty/eleventy-plugin-rss": "^1.2.0",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@lavamoat/allow-scripts": "^3.4.1",
-		"@lavamoat/preinstall-always-fail": "^2.1.1",
-		"kni": "github:borkshop/kni#8c09d0d11792236ff10ebed47d914661a2886dfb",
+		"kni": "^5.1.0",
 		"luxon": "^3.3.0",
 		"markdown-it-anchor": "^8.6.7",
 		"xmldom": "^0.6.0"
