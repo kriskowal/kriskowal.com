@@ -1,6 +1,23 @@
+/* Web fonts */
+@font-face {
+	font-family: "Literata";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/literata-regular.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Literata";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("/fonts/literata-semibold.woff2") format("woff2");
+}
+
 /* Defaults */
 :root {
-	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family: "Literata", "Charter", "Bitstream Charter", "Iowan Old Style", "Palatino Linotype", "URW Palladio L", P052, serif;
 	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
 }
 
@@ -48,12 +65,16 @@ body {
 	font-family: var(--font-family);
 	color: var(--text-color);
 	background-color: var(--background-color);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 html {
 	overflow-y: scroll;
 }
 body {
-	max-width: 40em;
+	max-width: 42em;
+	font-size: 18px;
+	line-height: 1.7;
 }
 
 @media (min-width: calc(40em + 20em)) {
@@ -96,11 +117,14 @@ p:last-child {
 	margin-bottom: 0;
 }
 p {
-	line-height: 1.5;
+	line-height: 1.7;
+	margin-bottom: 1.25em;
+	letter-spacing: 0.01em;
 }
 
 li {
-	line-height: 1.5;
+	line-height: 1.7;
+	margin-bottom: 0.5em;
 }
 
 a[href] {
@@ -115,10 +139,35 @@ a[href]:active {
 }
 
 main {
-	padding: 1rem;
+	padding: 2rem 1rem;
 }
 main :first-child {
 	margin-top: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: 600;
+	line-height: 1.3;
+	margin-top: 1.5em;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 2.25em;
+	margin-top: 0;
+	margin-bottom: 0.5em;
+}
+
+h2 {
+	font-size: 1.75em;
+}
+
+h3 {
+	font-size: 1.5em;
+}
+
+h4 {
+	font-size: 1.25em;
 }
 
 header {
