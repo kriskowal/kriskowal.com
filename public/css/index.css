@@ -15,10 +15,42 @@
 	src: url("/fonts/literata-semibold.woff2") format("woff2");
 }
 
+@font-face {
+	font-family: "Input Mono";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/input-mono-regular.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Input Mono";
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/input-mono-italic.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Input Mono";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/input-mono-bold.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Input Mono";
+	font-style: italic;
+	font-weight: 700;
+	font-display: swap;
+	src: url("/fonts/input-mono-bolditalic.woff2") format("woff2");
+}
+
 /* Defaults */
 :root {
 	--font-family: "Literata", "Charter", "Bitstream Charter", "Iowan Old Style", "Palatino Linotype", "URW Palladio L", P052, serif;
-	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+	--font-family-monospace: "Input Mono", Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
 }
 
 /* Theme colors */
@@ -230,6 +262,12 @@ table th {
 pre,
 code {
 	font-family: var(--font-family-monospace);
+}
+/* Override Prism's font-family and size for syntax-highlighted code */
+code[class*="language-"],
+pre[class*="language-"] {
+	font-family: var(--font-family-monospace);
+	font-size: 0.9375em;
 }
 pre:not([class*="language-"]) {
 	margin: .5em 0;
