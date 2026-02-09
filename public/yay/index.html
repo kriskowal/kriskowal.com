@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>YAY — Yet Another YAML</title>
 <style>
+@font-face {
+  font-family: 'Comic Mono';
+  src: url('ComicMono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Mono';
+  src: url('ComicMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #fafafa;
   --fg: #2e3440;
@@ -41,7 +57,7 @@ body {
 }
 
 #confetti {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -178,8 +194,8 @@ pre {
 }
 
 code {
-  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono',
-    'Cascadia Code', Menlo, Monaco, Consolas, monospace;
+  font-family: 'Comic Mono', 'SF Mono', 'Fira Code', 'Fira Mono',
+    'JetBrains Mono', 'Cascadia Code', Menlo, Monaco, Consolas, monospace;
 }
 
 p code, li code {
@@ -214,7 +230,7 @@ p code, li code {
 .types dt {
   font-weight: 600;
   color: var(--purple);
-  font-family: 'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+  font-family: 'Comic Mono', 'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
   font-size: 1rem;
 }
 
@@ -328,14 +344,14 @@ formats and languages.*</p>
 <div class="tab-bar">
 <button class="active" data-tab="yay">YAY 🎉</button>
 <button data-tab="yaml">YAML 📄</button>
-<button data-tab="yson">JSON (YSON) 🔷</button>
-<button data-tab="cbor-diag">CBOR Diag 🔬</button>
-<button data-tab="cbor-hex">CBOR Hex 🧊</button>
-<button data-tab="js">JavaScript 🟨</button>
+<button data-tab="yson">JSON (<a href="#yson">YSON</a>) 🔷</button>
+<button data-tab="cbor-hex">CBOR ❄️</button>
+<button data-tab="cbor-diag">CBOR 🔎</button>
+<button data-tab="js">JS 🟨</button>
 <button data-tab="python">Python 🐍</button>
 <button data-tab="rust">Rust 🦀</button>
-<button data-tab="scheme">Scheme 🎭</button>
-<button data-tab="c">C 🔧</button>
+<button data-tab="scheme">Scheme 🏸</button>
+<button data-tab="c">C 💣</button>
 <button data-tab="java">Java ☕</button>
 </div>
 
@@ -439,9 +455,9 @@ formats and languages.*</p>
   <span class="t">"concatenated"</span><span class="p">:</span> <span class="s">"I'm not dead yet. I feel happy!"</span><span class="p">,</span>
   <span class="t">"inline"</span><span class="p">:</span> <span class="p">{</span>
     <span class="t">"array"</span><span class="p">:</span> <span class="p">[</span>
-      <span class="k">null</span><span class="p">,</span>
-      <span class="k">null</span><span class="p">,</span>
-      <span class="k">null</span>
+      <span class="s">"#Infinity"</span><span class="p">,</span>
+      <span class="s">"#-Infinity"</span><span class="p">,</span>
+      <span class="s">"#NaN"</span>
     <span class="p">],</span>
     <span class="t">"bytes"</span><span class="p">:</span> <span class="s">"*f33dface"</span><span class="p">,</span>
     <span class="t">"object"</span><span class="p">:</span> <span class="p">{</span>
@@ -697,9 +713,10 @@ formats and languages.*</p>
 
 
 <h1>YOUR SPONSORSHIP COULD BE RIGHT HERE!</h1>
-<p class="center">THE SOFTWARE IS FREE, BUT AIN'T CHEAP!</p>
-<p class="center">inquire within: <a href="mailto:agile.lion63541@fastmail.com">agile.lion63541@fastmail.com</a></p>
-
+<p class="center">
+  THE SOFTWARE IS <a href="#license">FREE<sup>†</sup></a>, BUT AIN'T CHEAP!<br>
+  inquire within: <a href="mailto:agile.lion63541@fastmail.com">agile.lion63541@fastmail.com</a>
+</p>
 
 <h2>Command Line Tool 🪖</h2>
 
@@ -744,11 +761,11 @@ yay -t diag config.yay</code></pre>
 
 <h3 class="h3">Code Generation 🏗️</h3>
 
-<pre><code>yay -t js config.yay      <span class="c"># JavaScript 🟨</span>
+<pre><code>yay -t js config.yay      <span class="c"># JS 🟨</span>
 yay -t python config.yay  <span class="c"># Python 🐍</span>
 yay -t rust config.yay    <span class="c"># Rust 🦀</span>
-yay -t c config.yay       <span class="c"># C 🔧</span>
-yay -t scheme config.yay  <span class="c"># Scheme 🎭</span>
+yay -t c config.yay       <span class="c"># C 🪚</span>
+yay -t scheme config.yay  <span class="c"># Scheme 😛</span>
 yay -t java config.yay    <span class="c"># Java ☕</span></code></pre>
 
 <h3 class="h3">Pipe &amp; Stdin ↔️</h3>
@@ -760,7 +777,7 @@ echo '42' | yay -t js
 <span class="c"># Explicit stdin with -</span>
 yay -f json - &lt; data.json
 
-<span class="c"># YSON preserves big integers and bytes</span>
+<span class="c"># <a href="#yson">YSON</a> preserves big integers and bytes</span>
 echo '&lt;cafe&gt;' | yay -t yson
 <span class="c"># "*cafe"</span></code></pre>
 
@@ -878,13 +895,44 @@ echo '&lt;cafe&gt;' | yay -t yson
 <span class="c"># They extend to the end of the line.</span>
 <span class="t">answer</span><span class="p">:</span> <span class="n">42</span>  <span class="c"># inline comments work too</span></code></pre>
 
+<h2>YSON 🔷</h2>
+
+<p>YSON is a strict superset of JSON that preserves all YAY value types.
+Standard JSON cannot represent big integers, byte arrays, or the special float
+values <code>infinity</code>, <code>-infinity</code>, and <code>nan</code>.
+YSON fills the gap by encoding these as prefixed strings:</p>
+
+<pre><code><span class="c"># Big integers</span>
+<span class="s">"#42"</span>         <span class="c"># → 42 (big integer)</span>
+<span class="s">"#-7"</span>         <span class="c"># → -7</span>
+
+<span class="c"># Special floats</span>
+<span class="s">"#Infinity"</span>   <span class="c"># → infinity</span>
+<span class="s">"#-Infinity"</span>  <span class="c"># → -infinity</span>
+<span class="s">"#NaN"</span>        <span class="c"># → nan</span>
+
+<span class="c"># Byte arrays</span>
+<span class="s">"*cafe"</span>       <span class="c"># → &lt;cafe&gt;</span>
+<span class="s">"*"</span>           <span class="c"># → &lt;&gt; (empty)</span>
+
+<span class="c"># Strings starting with # or * are escaped with !</span>
+<span class="s">"!#hashtag"</span>   <span class="c"># → "#hashtag" (string)</span>
+<span class="s">"!*star"</span>      <span class="c"># → "*star" (string)</span></code></pre>
+
+<p>A YSON document is always valid JSON, so any JSON parser can read it.
+A YSON-aware reader recovers the original YAY types.
+YSON is itself a subset of the <a href="https://endojs.org">Endo SmallCaps</a> encoding.</p>
+
+<pre><code>yay -t yson config.yay        <span class="c"># YAY → YSON</span>
+yay -f yson config.yson       <span class="c"># YSON → YAY</span></code></pre>
+
 <h2>Get Started 🚀</h2>
 
 <p>The file extension is <code>.yay</code>.</p>
 
 <p>
   <a href="https://github.com/kriskowal/yay">GitHub</a> ·
-  Source, grammar, implementations in Rust, Go, JavaScript, Python, C, Scheme, and Java.
+  Source, grammar, implementations in Rust 🦀, Go🐭, JS 🟨, Python 🐍, C 🌊, Scheme 🏓, and Java 🙄.
 </p>
 <p>
   Install the CLI (<code>binyay</code>):
@@ -898,9 +946,9 @@ cargo install binyay               # Rust</code></pre>
   <a href="https://github.com/kriskowal/yay/tree/main/vscode">VS Code</a>
 </p>
 
-<footer>
-  Apache 2.0 · Copyright &copy; 2026 <a href="https://kriskowal.com">Kris Kowal</a>
-</footer>
+<footer><a name="license">
+  †Apache 2.0 · Copyright &copy; 2026 <a href="https://kriskowal.com">Kris Kowal</a>
+</a></footer>
 
 </div>
 <script>
@@ -929,14 +977,15 @@ document.querySelectorAll('.tabs').forEach(function(tabs) {
     '#d946ef', '#f43f5e', '#06b6d4', '#84cc16'
   ];
 
+  var canvasHeight = 800;
   function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = document.documentElement.scrollWidth;
+    canvas.height = canvasHeight;
   }
   window.addEventListener('resize', resize);
   resize();
 
-  var maxFall = 400; // pixels before fully faded
+  var maxFall = 600; // pixels before fully faded
 
   function Piece() {
     this.x = Math.random() * canvas.width;
