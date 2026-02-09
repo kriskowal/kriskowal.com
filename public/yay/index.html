@@ -304,6 +304,38 @@ footer a:hover { color: var(--accent); }
 .hd     { color: var(--fg-dim); }               /* offset */
 .hx     { color: var(--teal); }                 /* hex bytes */
 .ha     { color: var(--fg-dim); opacity: 0.4; } /* ASCII */
+
+/* SHON command/output examples */
+.shon-ex {
+  margin-bottom: 1.5rem;
+}
+.shon-ex .shon-cmd {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+.shon-ex .shon-cmd::before {
+  content: "$ ";
+  color: var(--fg-dim);
+  font-weight: 700;
+}
+.shon-ex .shon-out {
+  background: #f0f0f1;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: auto;
+  color: var(--fg-dim);
+}
 </style>
 </head>
 <body>
@@ -926,6 +958,82 @@ YSON is itself a subset of the <a href="https://endojs.org">Endo SmallCaps</a> e
 
 <pre><code>yay -t yson config.yay        <span class="c"># YAY → YSON</span>
 yay -f yson config.yson       <span class="c"># YSON → YAY</span></code></pre>
+
+<a name="shon"></a>
+<h2>SHON 🐚</h2>
+
+<p>SHON (Shell Object Notation) lets you construct structured data directly from
+command-line arguments, without writing a file or piping stdin.</p>
+
+<h3 class="h3">Objects</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay <span class="p">[</span> <span class="t">--name</span> <span class="s">hello</span> <span class="t">--count</span> <span class="n">42</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="p">{</span><span class="t">count</span><span class="p">:</span> <span class="n">42</span><span class="p">,</span> <span class="t">name</span><span class="p">:</span> <span class="s">"hello"</span><span class="p">}</span></code></pre>
+</div>
+
+<h3 class="h3">Arrays</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay <span class="p">[</span> <span class="n">1</span> <span class="n">2</span> <span class="n">3</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">2</span><span class="p">,</span> <span class="n">3</span><span class="p">]</span></code></pre>
+</div>
+
+<h3 class="h3">Nesting</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay <span class="p">[</span> <span class="t">--servers</span> <span class="p">[</span> <span class="s">localhost:8080</span> <span class="s">localhost:8081</span> <span class="p">]</span> <span class="t">--options</span> <span class="p">[</span> <span class="t">--verbose</span> <span class="k">-t</span> <span class="p">]</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="t">options</span><span class="p">:</span> <span class="p">{</span><span class="t">verbose</span><span class="p">:</span> <span class="k">true</span><span class="p">}</span>
+<span class="t">servers</span><span class="p">:</span> <span class="p">[</span><span class="s">"localhost:8080"</span><span class="p">,</span> <span class="s">"localhost:8081"</span><span class="p">]</span></code></pre>
+</div>
+
+<h3 class="h3">Convert to JSON</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay -t json <span class="p">[</span> <span class="t">--x</span> <span class="n">1.0</span> <span class="t">--y</span> <span class="n">2.0</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="p">{</span>
+  <span class="t">"x"</span><span class="p">:</span> <span class="n">1</span><span class="p">,</span>
+  <span class="t">"y"</span><span class="p">:</span> <span class="n">2</span>
+<span class="p">}</span></code></pre>
+</div>
+
+<h3 class="h3">Convert to YSON</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay -t yson <span class="p">[</span> <span class="t">--name</span> <span class="s">hello</span> <span class="t">--values</span> <span class="p">[</span> <span class="n">1</span> <span class="n">2</span> <span class="n">3</span> <span class="p">]</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="p">{</span>
+  <span class="t">"name"</span><span class="p">:</span> <span class="s">"hello"</span><span class="p">,</span>
+  <span class="t">"values"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s">"#1"</span><span class="p">,</span>
+    <span class="s">"#2"</span><span class="p">,</span>
+    <span class="s">"#3"</span>
+  <span class="p">]</span>
+<span class="p">}</span></code></pre>
+</div>
+
+<h3 class="h3">Hex Bytes</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay -t yson <span class="k">-x</span> <span class="s">cafe</span></code></pre>
+<pre class="shon-out"><code><span class="s">"*cafe"</span></code></pre>
+</div>
+
+<h3 class="h3">String Escaping</h3>
+
+<div class="shon-ex">
+<pre class="shon-cmd"><code>yay <span class="p">[</span> <span class="k">--</span> <span class="s">42</span> <span class="k">--</span> <span class="s">-t</span> <span class="k">--</span> <span class="s">[</span> <span class="p">]</span></code></pre>
+<pre class="shon-out"><code><span class="p">[</span><span class="s">"42"</span><span class="p">,</span> <span class="s">"-t"</span><span class="p">,</span> <span class="s">"["</span><span class="p">]</span></code></pre>
+</div>
+
+<p>Inside brackets, all YAY value types are available:
+<code>-n</code> (null), <code>-t</code> (true), <code>-f</code> (false),
+<code>-I</code> (∞), <code>-i</code> (−∞), <code>-N</code> (NaN),
+<code>-x</code> (hex bytes), <code>-b</code> (file→bytes),
+<code>-s</code> (file→string), <code>--</code> (string escape),
+and <code>--key</code> (object key).
+Bare words are strings. Bare numbers are integers or floats.
+See <a href="https://github.com/kriskowal/yay/blob/main/SHON.md">SHON.md</a>
+for the full specification.</p>
 
 <h2>Get Started 🚀</h2>
 
