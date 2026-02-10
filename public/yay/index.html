@@ -336,6 +336,44 @@ footer a:hover { color: var(--accent); }
   overflow-x: auto;
   color: var(--fg-dim);
 }
+
+/* Book ad */
+.bbbb-ad {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.bbbb-ad a {
+  color: var(--accent);
+}
+
+.bbbb-ad strong {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* When the viewport is wide enough for the ad to sit in the right margin.
+   Container is 52rem wide, centered.
+   Right margin = (100vw - 52rem) / 2.
+   Ad needs ~12rem + 2rem breathing room = 14rem margin minimum.
+   (100vw - 52rem) / 2 >= 14rem  →  100vw >= 80rem. */
+@media (min-width: 80rem) {
+  .bbbb-ad {
+    position: fixed;
+    top: 50%;
+    margin-top: 0;
+    padding: 0.75rem;
+    z-index: 10;
+    width: min(calc((100vw - 52rem) / 2 - 2rem), 14rem);
+    right: calc((100vw - 52rem) / 4);
+    transform: translateX(50%) translateY(-50%);
+    left: auto;
+  }
+}
 </style>
 </head>
 <body>
@@ -1061,6 +1099,14 @@ cargo install <a href="https://crates.io/crates/binyay">binyay</a>              
   <a href="https://github.com/kriskowal/yay/tree/main/vim">Vim</a> ·
   <a href="https://github.com/kriskowal/yay/tree/main/vscode">VS Code</a>
 </p>
+
+<div class="bbbb-ad" id="bbbb-ad">
+<a href="https://kriskowal.com/bbbb">
+<iframe name="computer" src="/bbbb/f.html" scrolling="no" style="width: 100%; aspect-ratio: 616.80365 / 566.70001; border: none"></iframe>
+<strong>Basic Binary Board Book</strong>
+</a><br>
+<a href="https://www.amazon.com/dp/B0F9VCF3TN">Now on Amazon!</a>
+</div>
 
 <footer><a name="license">
   †Apache 2.0 · Copyright &copy; 2026 <a href="https://kriskowal.com">Kris Kowal</a>
