@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steam Locomotive</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: monospace; font-size: 14px; background: #1a1a1a; color: #d4d4d4; padding: 16px; }
+  h2 { font-size: 15px; color: #aaa; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+  td { padding: 3px 8px; vertical-align: middle; }
+  td:first-child { width: 180px; color: #999; text-align: right; }
+  td:nth-child(2) { width: 200px; }
+  td:nth-child(3) { color: #7c7; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  input[type="range"] { width: 180px; accent-color: #c44; }
+  input[type="checkbox"] { accent-color: #c44; }
+  progress { width: 180px; height: 14px; }
+  progress::-webkit-progress-bar { background: #333; }
+  progress::-webkit-progress-value { background: #c44; }
+  progress::-moz-progress-bar { background: #c44; }
+  button { font-family: monospace; font-size: 13px; padding: 4px 14px; background: #333; color: #ddd; border: 1px solid #555; cursor: pointer; }
+  button:hover { background: #444; }
+  button:active { background: #555; }
+  .section { display: inline-block; vertical-align: top; margin-right: 24px; }
+  .indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #555; }
+  .indicator.on { background: #f72; box-shadow: 0 0 6px #f72; }
+  .indicator.off { background: #333; }
+  .indicator.relief { background: #f33; box-shadow: 0 0 8px #f33; }
+  #sim-speed-radios label { white-space: nowrap; margin-right: 6px; }
+  #status { color: #777; margin-top: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <h2>Tender</h2>
+  <table>
+    <tr>
+      <td>coal</td>
+      <td><progress id="tender-coal" value="100" max="100"></progress></td>
+      <td id="tender-coal-text"></td>
+    </tr>
+    <tr>
+      <td>water</td>
+      <td><progress id="tender-water" value="100" max="100"></progress></td>
+      <td id="tender-water-text"></td>
+    </tr>
+  </table>
+
+  <h2>Firebox</h2>
+  <table>
+    <tr>
+      <td>coal level</td>
+      <td><progress id="firebox-coal" value="0" max="100"></progress></td>
+      <td id="firebox-coal-text"></td>
+    </tr>
+    <tr>
+      <td>shoveling</td>
+      <td><span id="shoveling-indicator" class="indicator off"></span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>door</td>
+      <td><span id="door-indicator" class="indicator off"></span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>fire</td>
+      <td><span id="fire-indicator" class="indicator off"></span></td>
+      <td id="burn-rate-text"></td>
+    </tr>
+    <tr>
+      <td>ash</td>
+      <td><progress id="firebox-ash" value="0" max="100"></progress></td>
+      <td id="firebox-ash-text"></td>
+    </tr>
+    <tr>
+      <td>heat output</td>
+      <td><progress id="firebox-heat" value="0" max="100"></progress></td>
+      <td id="firebox-heat-text"></td>
+    </tr>
+  </table>
+
+
+</div>
+
+<div class="section">
+  <h2>Boiler</h2>
+  <table>
+    <tr>
+      <td>water level</td>
+      <td><progress id="boiler-water" value="80" max="100"></progress></td>
+      <td id="boiler-water-text"></td>
+    </tr>
+    <tr>
+      <td id="boiler-temp-label">water temperature</td>
+      <td><progress id="boiler-temp" value="0" max="100"></progress></td>
+      <td id="boiler-temp-text"></td>
+    </tr>
+    <tr>
+      <td>pressure</td>
+      <td><progress id="boiler-pressure" value="0" max="100"></progress></td>
+      <td id="boiler-pressure-text"></td>
+    </tr>
+    <tr>
+      <td>relief valve</td>
+      <td><span id="relief-indicator" class="indicator off"></span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>manifold temperature</td>
+      <td><progress id="manifold-temp" value="0" max="100"></progress></td>
+      <td id="manifold-temp-text"></td>
+    </tr>
+    <tr>
+      <td>fatigue</td>
+      <td></td>
+      <td id="manifold-dtdt-text"></td>
+    </tr>
+    <tr>
+      <td>cumulative fatigue</td>
+      <td><progress id="manifold-stress" value="0" max="100"></progress></td>
+      <td id="manifold-stress-text"></td>
+    </tr>
+  </table>
+
+  <h2>Superheater / Chest</h2>
+  <table>
+    <tr>
+      <td>superheater temp</td>
+      <td><progress id="super-temp" value="0" max="100"></progress></td>
+      <td id="super-temp-text"></td>
+    </tr>
+    <tr>
+      <td>superheater pressure</td>
+      <td><progress id="super-pressure" value="0" max="100"></progress></td>
+      <td id="super-pressure-text"></td>
+    </tr>
+    <tr>
+      <td>chest temp</td>
+      <td><progress id="chest-temp" value="0" max="100"></progress></td>
+      <td id="chest-temp-text"></td>
+    </tr>
+    <tr>
+      <td>chest pressure</td>
+      <td><progress id="chest-pressure" value="0" max="100"></progress></td>
+      <td id="chest-pressure-text"></td>
+    </tr>
+  </table>
+
+  <h2>Steam Rate</h2>
+  <table>
+    <tr>
+      <td>steam flow</td>
+      <td><progress id="steam-rate" value="0" max="100"></progress></td>
+      <td id="steam-rate-text"></td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Motion</h2>
+  <table>
+    <tr>
+      <td>speed</td>
+      <td><progress id="speed-bar" value="0" max="100"></progress></td>
+      <td id="speed-text">&numsp;0 km/h</td>
+    </tr>
+    <tr>
+      <td>distance</td>
+      <td></td>
+      <td id="distance-text">&numsp;0 m</td>
+    </tr>
+    <tr>
+      <td>tractive effort</td>
+      <td></td>
+      <td id="te-text">&numsp;0 kN</td>
+    </tr>
+    <tr>
+      <td>applied TE</td>
+      <td></td>
+      <td id="applied-te-text">&numsp;0 kN</td>
+    </tr>
+    <tr>
+      <td>wheel slip</td>
+      <td><span id="slip-indicator" class="indicator off"></span></td>
+      <td id="slip-text"></td>
+    </tr>
+  </table>
+
+  <h2>Pistons</h2>
+  <table>
+    <tr>
+      <td><label for="piston-left">left cylinder</label></td>
+      <td><input type="range" id="piston-left" min="0" max="100" value="50" disabled></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><label for="piston-right">right cylinder</label></td>
+      <td><input type="range" id="piston-right" min="0" max="100" value="50" disabled></td>
+      <td></td>
+    </tr>
+  </table>
+
+  <h2>Clock</h2>
+  <table>
+    <tr>
+      <td>elapsed</td>
+      <td></td>
+      <td id="elapsed-text"></td>
+    </tr>
+    <tr>
+      <td>time of day</td>
+      <td><progress id="clock-bar" value="0" max="100"></progress></td>
+      <td id="clock-text"></td>
+    </tr>
+    <tr>
+      <td>sim speed</td>
+      <td><progress id="sim-speed-bar" value="0" max="100"></progress></td>
+      <td id="sim-speed-text">1×</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="2" id="sim-speed-radios">
+        <label><input type="radio" name="sim-speed" value="auto" checked> auto</label>
+        <label><input type="radio" name="sim-speed" value="1"> 1×</label>
+        <label><input type="radio" name="sim-speed" value="5"> 5×</label>
+        <label><input type="radio" name="sim-speed" value="10"> 10×</label>
+        <label><input type="radio" name="sim-speed" value="50"> 50×</label>
+        <label><input type="radio" name="sim-speed" value="100"> 100×</label>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Controls</h2>
+  <table>
+    <tr>
+      <td><label for="ctl-throttle">throttle</label></td>
+      <td><input type="range" id="ctl-throttle" min="0" max="100" value="0"></td>
+      <td id="throttle-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-valve-gear">valve&nbsp;gear</label></td>
+      <td><input type="range" id="ctl-valve-gear" min="-100" max="100" value="33" step="5"></td>
+      <td id="valve-gear-text">fwd 25%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-brake">brake</label></td>
+      <td><input type="range" id="ctl-brake" min="0" max="100" value="0"></td>
+      <td id="brake-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-injector">injector</label></td>
+      <td><input type="range" id="ctl-injector" min="0" max="100" value="0"></td>
+      <td id="injector-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-blowdown">blow-down</label></td>
+      <td><input type="range" id="ctl-blowdown" min="0" max="100" value="0"></td>
+      <td id="blowdown-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-coal-min">coal min</label></td>
+      <td><input type="range" id="ctl-coal-min" min="0" max="100" value="0"></td>
+      <td id="coal-min-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-coal-max">coal max</label></td>
+      <td><input type="range" id="ctl-coal-max" min="0" max="100" value="0"></td>
+      <td id="coal-max-text">0%</td>
+    </tr>
+    <tr>
+      <td><label for="ctl-door">door open</label></td>
+      <td><input type="checkbox" id="ctl-door"></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><label for="btn-ignite">ignition</label></td>
+      <td><button id="btn-ignite">ignite</button></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><label for="btn-sand">sand</label></td>
+      <td><button id="btn-sand">drop sand</button></td>
+      <td id="sand-text"></td>
+    </tr>
+    <tr>
+      <td><label for="btn-shake">grate</label></td>
+      <td><button id="btn-shake">shake grate</button></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><label for="ctl-cars">cars</label></td>
+      <td><input type="number" id="ctl-cars" min="0" max="14" value="0" style="width: 60px;"></td>
+      <td id="cars-text"></td>
+    </tr>
+  </table>
+</div>
+
+<div>
+  <button id="btn-pause">pause</button>
+  <label for="ctl-units" style="margin-left: 16px; color: #999;">
+    <input type="checkbox" id="ctl-units"> imperial
+  </label>
+</div>
+<div id="status"></div>
+
+<script type="module">
+import { main } from "./index.js";
+main();
+</script>
+</body>
+</html>
