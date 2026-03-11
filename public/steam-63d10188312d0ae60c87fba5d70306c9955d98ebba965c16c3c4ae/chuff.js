@@ -63,7 +63,7 @@ export class ChuffSynth {
     this._cylPressure = null; // [[head, crank], [head, crank]]
   }
 
-  _ensureContext() {
+  ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -208,7 +208,7 @@ export class ChuffSynth {
    * @param {number} params.direction - Valve gear direction: +1 forward, -1 reverse, 0 neutral
    */
   update(params) {
-    this._ensureContext();
+    if (!this._ctx) return;
     this._buildGraph(params.numCylinders);
 
     if (this._ctx.state === "suspended") {

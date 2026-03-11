@@ -269,7 +269,7 @@ export class WhistleSynth {
 
   get pressureFraction() { return this._pressureFraction; }
 
-  _ensureContext() {
+  ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -412,7 +412,7 @@ export class WhistleSynth {
    * @param {number} opening - 0 (closed) to 1 (fully open)
    */
   setOpening(opening) {
-    this._ensureContext();
+    if (!this._ctx) return;
     this._buildGraph();
 
     if (this._ctx.state === "suspended") {

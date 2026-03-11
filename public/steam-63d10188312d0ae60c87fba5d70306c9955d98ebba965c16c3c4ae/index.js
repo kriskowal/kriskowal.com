@@ -119,7 +119,18 @@ export function main() {
   let running = false;
   let lastTime = null;
 
+  let audioStarted = false;
+  function ensureAudio() {
+    if (audioStarted) return;
+    audioStarted = true;
+    whistle.ensureContext();
+    chuff.ensureContext();
+    bell.ensureContext();
+    ambient.ensureContext();
+  }
+
   function ensureRunning() {
+    ensureAudio();
     if (!running) {
       running = true;
       lastTime = performance.now();

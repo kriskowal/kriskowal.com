@@ -70,7 +70,7 @@ export class BellSynth {
   /** Current bell swing angle [rad]. Positive = right, negative = left. */
   get angle() { return this._bellAngle; }
 
-  _ensureContext() {
+  ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -152,7 +152,7 @@ export class BellSynth {
 
   /** Begin pulling the bell cord. Call on button press. */
   pullStart() {
-    this._ensureContext();
+    if (!this._ctx) return;
     this._buildGraph();
     if (this._ctx.state === "suspended") this._ctx.resume();
     this._pulling = true;

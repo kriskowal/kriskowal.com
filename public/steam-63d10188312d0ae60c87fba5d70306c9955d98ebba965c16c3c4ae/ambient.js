@@ -112,7 +112,7 @@ export class AmbientSynth {
     this._shovelBuffer = null;
   }
 
-  _ensureContext() {
+  ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -463,7 +463,7 @@ export class AmbientSynth {
    * @param {boolean} p.reliefValveOpen - Safety valve blowing
    */
   update(p) {
-    this._ensureContext();
+    if (!this._ctx) return;
     this._buildGraph();
 
     if (this._ctx.state === "suspended") this._ctx.resume();
