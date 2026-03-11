@@ -1,12 +1,12 @@
 // Simulation — owns a Locomotive and manages time-stepping, auto speed, and
 // smoothed instrumentation.  Pure logic, no DOM.
 
-import { Locomotive, JOHNSON_BAR } from "./locomotive.js";
-
-export { JOHNSON_BAR };
+import { Locomotive } from "./locomotive.js";
 
 const MAX_SIM_SPEED = 60;
-const DT = 0.01; // physics timestep [s]
+const DT_ENGINE = 0.005; // engine physics timestep [s]
+const DT_BOILER = 0.05;  // boiler thermodynamics timestep [s]
+const ENGINE_PER_BOILER = Math.round(DT_BOILER / DT_ENGINE); // 10:1 ratio
 
 // Calm timer time constant: geometric ramp from 1× to 60×.
 // At t=0 → 1×, t=30s → ~38×, t=60s → ~53×, t=120s → ~59×
@@ -33,7 +33,7 @@ export class Simulation {
 
   get cfg() { return this.loco.cfg; }
 
-  // ── Auto simulation speed ──────────────────────────────────────────
+  // Auto simulation speed
 
   // Returns the ceiling based on resource health (1× multiplier when fine)
   _resourceMultiplier() {
@@ -115,7 +115,7 @@ export class Simulation {
     return Math.max(1, Math.round(base));
   }
 
-  // ── Tick: advance physics and animation by wall-clock elapsed [s] ──
+  // Tick: advance physics and animation by wall-clock elapsed [s]
 
   tick(elapsed) {
     const loco = this.loco;
@@ -136,14 +136,23 @@ export class Simulation {
       ? this.simSpeedOverride
       : this.autoSimSpeed();
 
+    // Bicameral stepping: engine runs at fine resolution (DT_ENGINE),
+    // boiler at coarser resolution (DT_BOILER). For each boiler step,
+    // ENGINE_PER_BOILER engine steps run first, then one boiler step.
     const simElapsed = elapsed * this.simSpeed;
-    const steps = Math.min(Math.round(simElapsed / DT), 1000);
-    for (let i = 0; i < steps; i++) {
-      loco.step(DT);
+    const boilerSteps = Math.min(
+      Math.round(simElapsed / DT_BOILER),
+      200,
+    );
+
+    for (let b = 0; b < boilerSteps; b++) {
+      for (let e = 0; e < ENGINE_PER_BOILER; e++) {
+        loco.stepEngine(DT_ENGINE);
+      }
+      loco.stepBoiler(DT_BOILER);
     }
 
     // Animation wheel phase (decoupled from simulation crank)
-    // Animate pistons at real-time wheel speed, not simulation speed
     this.animAngle += loco.wheelOmega * elapsed;
 
     // Smoothed steam rate (geometric EMA)

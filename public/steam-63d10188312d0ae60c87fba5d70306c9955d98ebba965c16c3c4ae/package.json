@@ -2,5 +2,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test steam.test.js geometry.test.js locomotive.test.js"
+  },
+  "devDependencies": {
+    "fft-js": "^0.0.12"
   }
 }

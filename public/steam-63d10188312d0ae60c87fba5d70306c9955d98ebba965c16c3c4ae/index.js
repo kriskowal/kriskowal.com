@@ -1,10 +1,14 @@
 // main.js — UI entrypoint for steam locomotive simulation.
 // Owns DOM wiring, render loop, and unit conversions.
 
-import { Simulation, JOHNSON_BAR } from "./simulation.js";
+import { Simulation } from "./simulation.js";
 import { pistonDisplacement } from "./geometry.js";
+import { WhistleSynth } from "./whistle.js";
+import { ChuffSynth } from "./chuff.js";
+import { BellSynth } from "./bell.js";
+import { AmbientSynth } from "./ambient.js";
 
-// ── Unit conversions ──────────────────────────────────────────────────
+// Unit conversions
 // Each returns { v: number, u: string } for use with fmt().
 
 export function temp(k, imperial) {
@@ -62,14 +66,14 @@ export function fmt(conv, decimals = 0) {
   return `${prefix}${n.toFixed(decimals)} ${conv.u}`;
 }
 
-// ── UI bootstrap (only runs in browser) ───────────────────────────────
+// UI bootstrap (only runs in browser)
 
 export function main() {
   const sim = new Simulation();
   const loco = sim.loco;
   const cfg = sim.cfg;
 
-  // ── DOM refs ──
+  // DOM refs
   const $ = (id) => document.getElementById(id);
 
   const ctlThrottle = $("ctl-throttle");
@@ -87,7 +91,7 @@ export function main() {
   const btnPause = $("btn-pause");
   const ctlUnits = $("ctl-units");
 
-  // ── Units ──
+  // Units
   let imperial = false;
   ctlUnits.addEventListener("change", () => { imperial = ctlUnits.checked; });
 
@@ -103,7 +107,7 @@ export function main() {
   const f = (n) => force(n, imperial);
   const h = (kW) => heat(kW, imperial);
 
-  // ── Sim speed override ──
+  // Sim speed override
   let simSpeedOverride = null; // null = auto
   for (const radio of document.querySelectorAll('input[name="sim-speed"]')) {
     radio.addEventListener("change", () => {
@@ -111,7 +115,7 @@ export function main() {
     });
   }
 
-  // ── State ──
+  // State
   let running = false;
   let lastTime = null;
 
@@ -124,14 +128,14 @@ export function main() {
     }
   }
 
-  // ── Control wiring ──
+  // Control wiring
   ctlThrottle.addEventListener("input", () => {
     loco.throttle = ctlThrottle.valueAsNumber / 100;
     ensureRunning();
   });
 
   ctlValveGear.addEventListener("input", () => {
-    loco[JOHNSON_BAR] = ctlValveGear.valueAsNumber / 100;
+    loco.johnsonBar = ctlValveGear.valueAsNumber / 100;
     ensureRunning();
   });
 
@@ -181,6 +185,45 @@ export function main() {
   btnSand.addEventListener("click", () => { loco.dropSand(); ensureRunning(); });
   btnShake.addEventListener("click", () => { loco.shakeGrate(); ensureRunning(); });
 
+  // Sound
+  const whistle = new WhistleSynth();
+  const chuff = new ChuffSynth();
+  const bell = new BellSynth();
+  const ambient = new AmbientSynth();
+  const ctlWhistle = $("ctl-whistle");
+  let whistleTouching = false;
+
+  function whistleUpdate() {
+    const val = ctlWhistle.valueAsNumber / 100;
+    whistle.setOpening(val);
+    $("whistle-text").textContent = val > 0 ? ` ${ctlWhistle.value}%` : "";
+  }
+
+  function whistleRelease() {
+    whistleTouching = false;
+    whistle.release();
+    ctlWhistle.value = 0;
+    $("whistle-text").textContent = "";
+  }
+
+  ctlWhistle.addEventListener("input", () => {
+    whistleTouching = true;
+    whistleUpdate();
+  });
+  ctlWhistle.addEventListener("mousedown", () => { whistleTouching = true; });
+  ctlWhistle.addEventListener("touchstart", () => { whistleTouching = true; }, { passive: true });
+  ctlWhistle.addEventListener("mouseup", whistleRelease);
+  ctlWhistle.addEventListener("mouseleave", () => { if (whistleTouching) whistleRelease(); });
+  ctlWhistle.addEventListener("touchend", whistleRelease);
+  ctlWhistle.addEventListener("touchcancel", whistleRelease);
+
+  $("btn-bell").addEventListener("mousedown", () => { bell.pullStart(); });
+  $("btn-bell").addEventListener("mouseup", () => { bell.pullEnd(); });
+  $("btn-bell").addEventListener("mouseleave", () => { bell.pullEnd(); });
+  $("btn-bell").addEventListener("touchstart", () => { bell.pullStart(); }, { passive: true });
+  $("btn-bell").addEventListener("touchend", () => { bell.pullEnd(); });
+  $("btn-bell").addEventListener("touchcancel", () => { bell.pullEnd(); });
+
   btnPause.addEventListener("click", () => {
     if (running) {
       running = false;
@@ -191,7 +234,7 @@ export function main() {
     }
   });
 
-  // ── Render loop ──
+  // Render loop
   const GAUGE_INTERVAL = 500;
   let lastGauge = 0;
 
@@ -235,6 +278,49 @@ export function main() {
       const pos = pistonDisplacement(theta, cfg.stroke / 2, cfg.rodLen);
       $(cyl === 0 ? "piston-left" : "piston-right").value = (pos / cfg.stroke) * 100;
     }
+
+    // Cylinder exhaust sound (every frame — driven by wheel animation)
+    const jbPos = loco.johnsonBar;
+    const chuffSnap = loco.snapshot();
+    const chestGauge = Math.max(0, chuffSnap.chestPressure - cfg.pAtm);
+    const maxGauge = cfg.maxBoilerPressure - cfg.pAtm;
+    chuff.update({
+      elapsed,
+      animAngle: sim.animAngle,
+      crankOffset: cfg.crankOffset,
+      numCylinders: cfg.numCylinders,
+      cutoff: Math.abs(jbPos) * cfg.maxCutoff,
+      steamLap: cfg.steamLap,
+      exhaustLap: cfg.exhaustLap,
+      valveLead: cfg.valveLead,
+      maxPortOpening: cfg.maxPortOpening,
+      chestPressureGauge: chestGauge,
+      maxPressure: maxGauge,
+      direction: Math.sign(jbPos),
+    });
+
+    // Bell physics (every frame — pendulum must stay in sync)
+    bell.update(elapsed);
+    const bellDeg = (((bell.angle * (180 / Math.PI)) % 360) + 540) % 360 - 180;
+    $("bell-swing").value = Math.round(bellDeg);
+
+    // Ambient sounds (every frame)
+    ambient.update({
+      brake: loco.brake,
+      speed: loco.velocity,
+      fireboxHeat: loco.fireboxHeat,
+      maxFireboxHeat: cfg.maxBurnRate * cfg.coalEnergy,
+      doorOpen: loco.fireboxDoorOpen,
+      shoveling: loco.shoveling,
+      simSpeed: sim.simSpeed,
+      blowdown: loco.blowdown,
+      boilerPressure: loco.boilerPressure,
+      maxPressure: cfg.maxBoilerPressure,
+      pAtm: cfg.pAtm,
+      waterFraction: loco.boilerWaterMass / cfg.boilerWaterMass,
+      sandDropping: loco.sandDropping,
+      reliefValveOpen: loco.reliefValveOpen,
+    });
 
     // Gauges (at slower interval)
     if (timestamp - lastGauge < GAUGE_INTERVAL) return;
@@ -283,6 +369,12 @@ export function main() {
       : (loco.boilerPressure / 2068) * 100;
     $("boiler-pressure-text").textContent = fmt(bPres, 0);
 
+    // Whistle available pressure tracks boiler gauge pressure
+    const pGauge = Math.max(0, loco.boilerPressure - cfg.pAtm);
+    const pMax = cfg.maxBoilerPressure - cfg.pAtm;
+    whistle.pressureFraction = pMax > 0 ? pGauge / pMax : 0;
+    if (whistleTouching) whistleUpdate();
+
     $("relief-indicator").className = "indicator " + (loco.reliefValveOpen ? "relief" : "off");
 
     // Manifold
@@ -323,7 +415,7 @@ export function main() {
 
     // Controls readout
     $("throttle-text").textContent = ` ${(loco.throttle * 100).toFixed(0)}%`;
-    const jb = loco[JOHNSON_BAR];
+    const jb = loco.johnsonBar;
     const jbCutoff = Math.abs(jb) * cfg.maxCutoff;
     const jbDir = jb > 0 ? "fwd" : jb < 0 ? "rev" : "N";
     $("valve-gear-text").textContent = ` ${jbDir} ${(jbCutoff * 100).toFixed(0)}%`;

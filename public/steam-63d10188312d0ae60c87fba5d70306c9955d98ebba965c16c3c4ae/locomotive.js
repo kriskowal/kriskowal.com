@@ -14,10 +14,7 @@ import {
 
 const { PI, sqrt, abs, max, min } = Math;
 
-// Property name uses a non-breaking space (U+00A0)
-export const JOHNSON_BAR = "valve\u00a0gear";
-
-// ── Defaults ────────────────────────────────────────────────────────
+// Defaults
 
 export const DEFAULTS = {
   // Boiler — CPRR #60 "Jupiter" (Schenectady, 1868)
@@ -62,7 +59,7 @@ export const DEFAULTS = {
   crankOffset: PI / 2, // rad between cylinder cranks (quartered)
 
   // Flow
-  dischargeCoeff: 0.6, // orifice discharge coefficient
+  dischargeCoeff: 0.85, // slide-valve ports are rounded ducts, not sharp orifices
   maxThrottleArea: 0.008, // m² throttle fully open area (smaller engine)
 
   // Resistance — iron rail, journal bearings
@@ -116,11 +113,15 @@ export const DEFAULTS = {
   boilerSurfaceArea: 16, // m² (barrel + firebox + smokebox)
   boilerHeatTransferCoeff: 0.010, // kW/(m²·K) (~10 W/(m²·K), less effective insulation)
 
-  // Safety
-  maxBoilerPressure: 929, // kPa (~120 psi gauge, absolute)
+  // Safety — pressure relief valve
+  maxBoilerPressure: 929, // kPa (~120 psi gauge, absolute) — valve opens here
+  reliefValveHysteresis: 10, // kPa — valve reseats this far below set pressure
+  reliefValveMaxFlow: 20, // kg/s — must exceed max steaming rate to control pressure
+  reliefValveResponse: 20, // kPa proportional band above set pressure
+  reliefValveMinFrac: 0.5, // pop valve opens to at least 50% when tripped
 };
 
-// ── Chamber helper ──────────────────────────────────────────────────
+// Chamber helper
 
 function gasPressure(T, rho) {
   return rawPressure(T, rho);
@@ -133,7 +134,7 @@ function orificeFlow(pUp, pDown, rhoUp, area, Cd) {
   return Cd * area * sqrt(2 * rhoUp * dp * 1000);
 }
 
-// ── Locomotive simulation ───────────────────────────────────────────
+// Locomotive simulation
 
 export class Locomotive {
   constructor(config = {}) {
@@ -145,7 +146,7 @@ export class Locomotive {
     this.wheelR = c.drivingWheelDiameter / 2;
     this.pistonArea = (PI / 4) * c.bore ** 2;
 
-    // ── State ──
+    // State
 
     // Boiler (saturated)
     this.boilerTemp = c.boilerTemp;
@@ -195,7 +196,7 @@ export class Locomotive {
 
     // Controls
     this.throttle = 0; // 0–1 main steam valve
-    this[JOHNSON_BAR] = 1 / 3; // -1 (full reverse) … 0 (neutral) … +1 (full forward)
+    this.johnsonBar = 1 / 3; // -1 (full reverse) ... 0 (neutral) ... +1 (full forward)
     this.shoveling = false; // continuous coal transfer while true
     this.fireboxDoorOpen = false;
     this.manualDoorOpen = false; // player-controlled door override
@@ -215,6 +216,7 @@ export class Locomotive {
     this.totalTE = 0;
     this.appliedTE = 0; // TE after adhesion limit
     this.steamRate = 0;
+    this._engineSteamDemand = 0; // kg/s — last engine step's chest draw
     this.fireboxHeat = 0; // kW entering the boiler
     this.reliefValveOpen = false;
   }
@@ -242,115 +244,25 @@ export class Locomotive {
     return pistonDisplacement(theta, this.crankR, this.cfg.rodLen);
   }
 
+  // ENGINE SIMULATION — valve gear, cylinders, vehicle dynamics.
+  // Reads chest state set by boiler sim; drains chestMass directly.
+
   /**
-   * Advance the simulation by dt seconds.
-   * Heat comes from the internal firebox model; controls are public properties.
+   * Advance the engine (mechanical) simulation by dt seconds.
+   * Computes cylinder flows, tractive effort, and vehicle dynamics.
+   * Drains steam from the chest; the boiler sim refills it.
    * @param {number} dt - Time step [s]
    */
-  step(dt) {
+  stepEngine(dt) {
     if (this.exploded) return;
     const c = this.cfg;
 
-    // ── 0. Auto-shoveling: fireman maintains coal level between min/max ──
-    const coalFrac = this.fireboxCoal / c.fireboxMaxCoal;
-    if (this.coalMax > 0 && coalFrac <= this.coalMin) this.shoveling = true;
-    if (coalFrac >= this.coalMax || this.coalMax === 0) this.shoveling = false;
-    this.fireboxDoorOpen = this.shoveling || this.manualDoorOpen;
-
-    if (this.shoveling) {
-      const space = c.fireboxMaxCoal - this.fireboxCoal;
-      if (space > 0.001 && this.tenderCoal > 0) {
-        const moved = min(c.shovelRate * dt, this.tenderCoal, space);
-        this.fireboxCoal += moved;
-        this.tenderCoal -= moved;
-      } else {
-        this.shoveling = false;
-      }
-    }
-
-    // ── 0a. Firebox ──
-    let qFirebox = 0;
-    if (this.ignited && this.fireboxCoal > 0) {
-      const doorFactor = this.fireboxDoorOpen ? 1.0 : 0.7;
-      const ashChoke = 1 - min(1, this.fireboxAsh / c.ashMaxKg);
-      const airFactor = doorFactor * ashChoke;
-      const coalFraction = min(1, this.fireboxCoal / (c.fireboxMaxCoal * 0.3));
-      this.burnRate = c.maxBurnRate * coalFraction * airFactor;
-      const burned = min(this.burnRate * dt, this.fireboxCoal);
-      this.fireboxCoal -= burned;
-      this.fireboxAsh = min(this.fireboxAsh + burned * c.ashFraction, c.ashMaxKg);
-      qFirebox = (burned / dt) * c.coalEnergy; // kW
-      // Below 1g the fire dies out
-      if (this.fireboxCoal < 0.001) {
-        this.fireboxCoal = 0;
-        this.ignited = false;
-        this.burnRate = 0;
-      }
-    } else {
-      this.burnRate = 0;
-      if (this.fireboxCoal <= 0) this.ignited = false;
-    }
-
-    // ── 0b. Injector: add cold tender water to boiler ──
-    if (this.injectorThrottle > 0 && this.tenderWater > 0) {
-      const injFlow = c.injectorMaxFlow * this.injectorThrottle;
-      const waterAdded = min(injFlow * dt, this.tenderWater);
-      const oldMass = this.boilerWaterMass;
-      this.boilerWaterMass += waterAdded;
-      this.tenderWater -= waterAdded;
-      // Mixing cold water cools the boiler
-      if (this.boilerWaterMass > 0) {
-        const mixTemp =
-          (this.boilerTemp * oldMass + c.tAtm * waterAdded) /
-          this.boilerWaterMass;
-        this.boilerTemp = max(c.tAtm, mixTemp);
-      }
-    }
-
-    // ── 1. Boiler ──
-    const pBoiler = psat(this.boilerTemp);
-    const rhoSatV = rhosatVap(this.boilerTemp);
-    const rhoSatL = rhosatLiq(this.boilerTemp);
-    const hg = rawEnthalpy(this.boilerTemp, rhoSatV);
-    const hf = rawEnthalpy(this.boilerTemp, rhoSatL);
-    const hfg = hg - hf;
-
-    // Heat split between boiler and superheater
-    const qBoiler = qFirebox * (1 - c.superheaterHeatFraction); // kW
-    const qSuper = qFirebox * c.superheaterHeatFraction; // kW
-
-    // ── 2. Flow: Boiler → Superheater (throttle-controlled) ──
-    // No steam production until the boiler is at saturation temperature.
-    // Below ~100°C the water is subcooled liquid — no steam to flow.
-    const throttleArea = c.maxThrottleArea * this.throttle;
-    const superRho = this.superMass / c.superheaterVolume;
-    const pSuper = gasPressure(this.superTemp, superRho);
-    let mDotBS = 0;
-    if (pBoiler > c.pAtm) {
-      const mDotBoilerToSuper = orificeFlow(
-        pBoiler,
-        pSuper,
-        rhoSatV,
-        throttleArea,
-        c.dischargeCoeff,
-      );
-      mDotBS = min(mDotBoilerToSuper, this.boilerWaterMass / dt);
-    }
-
-    // ── 3. Flow: Superheater → Steam chest ──
+    // Read current chest state (maintained by boiler sim)
     const chestRho = this.chestMass / c.steamChestVolume;
     const pChest = gasPressure(this.chestTemp, chestRho);
-    const mDotSuperToChest = orificeFlow(
-      pSuper,
-      pChest,
-      superRho,
-      c.maxThrottleArea,
-      c.dischargeCoeff,
-    );
 
-    // ── 4. Valve gear & cylinders ──
-    // Valve gear: sign = direction, |position| × maxCutoff = cutoff
-    const jbPos = this[JOHNSON_BAR];
+    // Valve gear & cylinders
+    const jbPos = this.johnsonBar;
     const direction = Math.sign(jbPos);
     const cutoff = abs(jbPos) * c.maxCutoff;
 
@@ -365,10 +277,8 @@ export class Locomotive {
 
     for (let cyl = 0; cyl < c.numCylinders; cyl++) {
       const theta = this.crankAngle + cyl * c.crankOffset;
-      // Valve gear direction: reverse shifts valve events by PI
       const valveTheta = direction < 0 ? theta + PI : theta;
 
-      // Neutral (center): no valve motion → no admission
       const v =
         direction === 0
           ? 0
@@ -401,8 +311,6 @@ export class Locomotive {
         if (mass < 1e-8) mass = 1e-8;
         const rho = mass / vol;
 
-        // Ideal gas for cylinder steam — the full Keenan EOS becomes
-        // unstable at high densities that occur when the crank stalls.
         const pCyl = max(0, rho * 0.461537266 * temp);
 
         const admitArea = steamArr[end] * c.portBarLength;
@@ -426,9 +334,6 @@ export class Locomotive {
         const dm = (mDotIn - mDotOut) * dt;
         const newMass = max(1e-8, mass + dm);
 
-        // Mass-weighted mixing for temperature (same approach as
-        // superheater/chest — avoids the instability of dividing
-        // energy by near-zero mass in estimateDeltaT).
         const mRetained = max(0, mass - mDotOut * dt);
         const mIn = mDotIn * dt;
         let newTemp = temp;
@@ -455,130 +360,42 @@ export class Locomotive {
       totalTE += tractiveEffort(Ft, this.crankR, this.wheelR);
     }
 
-    // ── 5. Update superheater state ──
-    // Mass-weighted mixing avoids the instability of dividing energy by
-    // near-zero mass that plagues the cv-based estimateDeltaT approach.
-    const newSuperMass = max(
-      1e-6,
-      this.superMass + (mDotBS - mDotSuperToChest) * dt,
-    );
-    const mSuperIn = mDotBS * dt;
-    const mSuperRetained = max(0, this.superMass - mDotSuperToChest * dt);
-    if (newSuperMass > 1e-5) {
-      this.superTemp =
-        (mSuperRetained * this.superTemp + mSuperIn * this.boilerTemp) /
-        newSuperMass;
-    }
-    // Firebox heat raises superheater temperature (only with meaningful mass)
-    if (qSuper > 0 && newSuperMass > 0.01) {
-      const cpSteam = 2.0; // kJ/(kg·K) approximate
-      this.superTemp += (qSuper * dt) / (newSuperMass * cpSteam);
-    }
-    this.superTemp = max(c.tAtm, this.superTemp);
-    this.superMass = newSuperMass;
+    // Drain chest — engine consumes steam directly
+    this.chestMass = max(1e-6, this.chestMass - totalMDotFromChest * dt);
 
-    // ── 6. Update steam chest state ──
-    const newChestMass = max(
-      1e-6,
-      this.chestMass + (mDotSuperToChest - totalMDotFromChest) * dt,
+    // Refill chest from superheater (at engine rate for coupling fidelity)
+    const superRho = this.superMass / c.superheaterVolume;
+    const pSuper = gasPressure(this.superTemp, superRho);
+    const postDrainChestRho = this.chestMass / c.steamChestVolume;
+    const pChestPost = gasPressure(this.chestTemp, postDrainChestRho);
+    const mDotSuperToChest = orificeFlow(
+      pSuper, pChestPost, superRho, c.maxThrottleArea, c.dischargeCoeff,
     );
-    const mChestIn = mDotSuperToChest * dt;
-    const mChestRetained = max(0, this.chestMass - totalMDotFromChest * dt);
-    if (newChestMass > 1e-5) {
+    const chestRefill = mDotSuperToChest * dt;
+    const newChestMass = max(1e-6, this.chestMass + chestRefill);
+    if (newChestMass > 1e-5 && chestRefill > 0) {
       this.chestTemp =
-        (mChestRetained * this.chestTemp + mChestIn * this.superTemp) /
+        (this.chestMass * this.chestTemp + chestRefill * this.superTemp) /
         newChestMass;
     }
     this.chestTemp = max(c.tAtm, this.chestTemp);
     this.chestMass = newChestMass;
+    this.superMass = max(1e-6, this.superMass - chestRefill);
 
-    // ── 7. Update boiler ──
-    this.boilerWaterMass = max(0, this.boilerWaterMass - mDotBS * dt);
-    const qLoss = c.boilerHeatTransferCoeff * c.boilerSurfaceArea
-      * (this.boilerTemp - c.tAtm); // kW lost to environment
-    const qNetBoiler = qBoiler - mDotBS * hfg - qLoss;
-    if (this.boilerWaterMass > 0) {
-      const dTBoiler = (qNetBoiler * dt) / (this.boilerWaterMass * 4.2);
-      this.boilerTemp = max(c.tAtm, this.boilerTemp + dTBoiler);
-      this.boilerTemp = min(this.boilerTemp, 640);
-    }
-
-    // ── 7a. Blow-down valve — drain hot water from boiler bottom ──
-    if (this.blowdown > 0) {
-      const pGauge = max(0, pBoiler - c.pAtm);
-      const pFrac = pGauge / (c.maxBoilerPressure - c.pAtm);
-      const flow = c.blowdownMaxFlow * this.blowdown * pFrac;
-      if (this.boilerWaterMass > 0) {
-        const drained = min(flow * dt, this.boilerWaterMass);
-        this.boilerWaterMass -= drained;
-      } else if (this.boilerTemp > c.tAtm) {
-        // Water gone — vent remaining steam until pressure equalizes.
-        // Model as rapid cooldown: steam escaping carries energy away,
-        // dropping boiler temp (and thus psat) toward ambient.
-        const steamMass = c.boilerVolume * rhosatVap(this.boilerTemp);
-        const ventMass = min(flow * dt, steamMass);
-        if (steamMass > 0.01) {
-          // Each kg vented removes proportional thermal energy
-          const fracVented = ventMass / steamMass;
-          const dT = fracVented * (this.boilerTemp - c.tAtm);
-          this.boilerTemp = max(c.tAtm, this.boilerTemp - dT);
-        } else {
-          this.boilerTemp = c.tAtm;
-        }
-      }
-    }
-
-    // ── 7b. Manifold thermal dynamics ──
-    // The manifold is a heavy casting in contact with boiler steam.
-    // Heat flows from boiler to manifold proportional to temperature difference.
-    const qManifold = c.manifoldHeatTransfer * (this.boilerTemp - this.manifoldTemp); // kW
-    const prevManifoldTemp = this.manifoldTemp;
-    this.manifoldTemp += (qManifold * dt) / (c.manifoldMass * c.manifoldCp);
-    this.manifoldTemp = max(c.tAtm, this.manifoldTemp);
-    this.manifoldDTdt = (this.manifoldTemp - prevManifoldTemp) / dt;
-
-    // Cumulative stress: thermal cycling + pressure fatigue
-    // Rapid temperature changes stress the casting (thermal expansion mismatch)
-    const thermalStress = c.manifoldStressPerK * abs(this.manifoldDTdt) * dt;
-    // Sustained high pressure fatigues the material
-    const pGauge = max(0, pBoiler - c.pAtm);
-    const pressureStress = c.manifoldPressureStress * pGauge * dt;
-    this.manifoldStress += thermalStress + pressureStress;
-
-    if (this.manifoldStress >= c.manifoldStressLimit) {
-      this.exploded = true;
-    }
-
-    // ── 8. Pressure relief valve ──
-    this.boilerPressure = max(c.pAtm, psat(this.boilerTemp));
-    this.reliefValveOpen = this.boilerPressure > c.maxBoilerPressure;
-    if (this.reliefValveOpen) {
-      this.boilerTemp -= 0.5;
-      this.boilerPressure = max(c.pAtm, psat(this.boilerTemp));
-    }
-
-    // ── 9. Vehicle dynamics with adhesion ──
+    // Vehicle dynamics with adhesion
     const trainMass = c.locomotiveMass + this.numCars * c.carMass
       + this.boilerWaterMass + this.tenderCoal + this.tenderWater;
     const g = 9.81;
 
-    // Adhesion limit: weight on drivers × friction coefficient
     const onSand = abs(this.distance - this.sandDistance) < c.sandEffectDistance;
-    if (!this.sandDropping && !onSand) {
-      // Sand effect expires once we move away
-    }
     const muStatic = c.staticAdhesion + (onSand ? c.sandAdhesionBoost : 0);
     const muDynamic = c.dynamicAdhesion + (onSand ? c.sandAdhesionBoost : 0);
     const weightOnDrivers = c.drivingAxleMass * g;
     const Fadhesion = (this.wheelSlip ? muDynamic : muStatic) * weightOnDrivers;
 
-    // Adhesion: check if wheels slip or grip
-    // Approximate wheel+rod rotational inertia as equivalent mass at rim
-    const wheelEquivMass = 1500; // kg — wheels, rods, coupling rods
+    const wheelEquivMass = 1500;
 
     if (this.wheelSlip) {
-      // Already slipping — check if grip recovers
-      // Wheel surface speed vs vehicle speed
       const wheelSurfaceV = this.wheelOmega * this.wheelR;
       if (abs(wheelSurfaceV - this.velocity) < 0.1 && abs(totalTE) <= Fadhesion) {
         this.wheelSlip = false;
@@ -590,17 +407,15 @@ export class Locomotive {
       this.wheelSlip = true;
     }
 
-    let appliedTE; // force actually reaching the rail
+    let appliedTE;
     if (this.wheelSlip) {
-      // Dynamic friction at rail, in direction of wheel-rail relative motion
       const wheelSurfaceV = this.wheelOmega * this.wheelR;
       const slipDir = wheelSurfaceV - this.velocity > 0 ? 1 :
                       wheelSurfaceV - this.velocity < 0 ? -1 :
                       Math.sign(totalTE);
       const Ffriction = slipDir * muDynamic * weightOnDrivers;
-      appliedTE = Ffriction; // force on vehicle from rail
+      appliedTE = Ffriction;
 
-      // Wheels spin freely: steam torque opposed only by dynamic friction
       const Fwheel = totalTE - Ffriction;
       const wheelAccel = Fwheel / wheelEquivMass;
       this.wheelOmega += wheelAccel * dt / this.wheelR;
@@ -609,7 +424,6 @@ export class Locomotive {
       this.wheelOmega = this.velocity / this.wheelR;
     }
 
-    // Stop dropping sand once wheels have grip and are moving
     if (this.sandDropping && !this.wheelSlip && abs(this.velocity) > 0.1) {
       this.sandDropping = false;
     }
@@ -628,7 +442,6 @@ export class Locomotive {
     const accel = Fnet / trainMass;
 
     const newVelocity = this.velocity + accel * dt;
-    // Prevent resistance from reversing direction (coasting to stop)
     if (dir !== 0 && Math.sign(newVelocity) !== dir && totalTE === 0) {
       this.velocity = 0;
     } else {
@@ -637,15 +450,226 @@ export class Locomotive {
     this.distance += this.velocity * dt;
     this.simTime += dt;
 
-    // Crank angle follows wheel rotation (which may differ from vehicle speed during slip)
     this.crankAngle = (this.crankAngle + this.wheelOmega * dt) % (2 * PI);
 
-    // Update instrumentation
-    this.boilerPressure = max(c.pAtm, psat(this.boilerTemp));
+    // Engine outputs — available to boiler sim and instrumentation
+    this._engineSteamDemand = totalMDotFromChest;
     this.totalTE = totalTE;
     this.appliedTE = appliedTE;
+  }
+
+  /**
+   * Analytical steam demand [kg/s] based on classical indicator diagram.
+   * Timestep-independent cross-check against numerical cylinder flows.
+   */
+  analyticalSteamDemand() {
+    const c = this.cfg;
+    const cutoff = abs(this.johnsonBar) * c.maxCutoff;
+    if (cutoff < 0.001 || abs(this.wheelOmega) < 0.01) return 0;
+
+    const sweptVolume = this.pistonArea * c.stroke;
+    const chestRho = this.chestMass / c.steamChestVolume;
+    const revsPerSec = abs(this.wheelOmega) / (2 * PI);
+
+    // Each double-acting cylinder admits steam for the cutoff fraction
+    // on both head and crank ends, once per revolution each.
+    return c.numCylinders * 2 * sweptVolume * cutoff * chestRho * revsPerSec;
+  }
+
+  // BOILER SIMULATION — firebox, thermodynamics, steam flow chain.
+  // Refills the chest that the engine sim drains.
+
+  /**
+   * Advance the boiler (thermodynamic) simulation by dt seconds.
+   * Handles firebox, injector, steam flow chain, blowdown, manifold,
+   * and relief valve. Refills the steam chest.
+   * @param {number} dt - Time step [s]
+   */
+  stepBoiler(dt) {
+    if (this.exploded) return;
+    const c = this.cfg;
+
+    // Auto-shoveling: fireman maintains coal level between min/max
+    const coalFrac = this.fireboxCoal / c.fireboxMaxCoal;
+    if (this.coalMax > 0 && coalFrac <= this.coalMin) this.shoveling = true;
+    if (coalFrac >= this.coalMax || this.coalMax === 0) this.shoveling = false;
+    this.fireboxDoorOpen = this.shoveling || this.manualDoorOpen;
+
+    if (this.shoveling) {
+      const space = c.fireboxMaxCoal - this.fireboxCoal;
+      if (space > 0.001 && this.tenderCoal > 0) {
+        const moved = min(c.shovelRate * dt, this.tenderCoal, space);
+        this.fireboxCoal += moved;
+        this.tenderCoal -= moved;
+      } else {
+        this.shoveling = false;
+      }
+    }
+
+    // Firebox
+    let qFirebox = 0;
+    if (this.ignited && this.fireboxCoal > 0) {
+      const doorFactor = this.fireboxDoorOpen ? 1.0 : 0.7;
+      const ashChoke = 1 - min(1, this.fireboxAsh / c.ashMaxKg);
+      const airFactor = doorFactor * ashChoke;
+      const coalFraction = min(1, this.fireboxCoal / (c.fireboxMaxCoal * 0.3));
+      this.burnRate = c.maxBurnRate * coalFraction * airFactor;
+      const burned = min(this.burnRate * dt, this.fireboxCoal);
+      this.fireboxCoal -= burned;
+      this.fireboxAsh = min(this.fireboxAsh + burned * c.ashFraction, c.ashMaxKg);
+      qFirebox = (burned / dt) * c.coalEnergy; // kW
+      if (this.fireboxCoal < 0.001) {
+        this.fireboxCoal = 0;
+        this.ignited = false;
+        this.burnRate = 0;
+      }
+    } else {
+      this.burnRate = 0;
+      if (this.fireboxCoal <= 0) this.ignited = false;
+    }
+
+    // Injector: add cold tender water to boiler
+    if (this.injectorThrottle > 0 && this.tenderWater > 0) {
+      const injFlow = c.injectorMaxFlow * this.injectorThrottle;
+      const waterAdded = min(injFlow * dt, this.tenderWater);
+      const oldMass = this.boilerWaterMass;
+      this.boilerWaterMass += waterAdded;
+      this.tenderWater -= waterAdded;
+      if (this.boilerWaterMass > 0) {
+        const mixTemp =
+          (this.boilerTemp * oldMass + c.tAtm * waterAdded) /
+          this.boilerWaterMass;
+        this.boilerTemp = max(c.tAtm, mixTemp);
+      }
+    }
+
+    // Boiler thermodynamics
+    const pBoiler = psat(this.boilerTemp);
+    const rhoSatV = rhosatVap(this.boilerTemp);
+    const rhoSatL = rhosatLiq(this.boilerTemp);
+    const hg = rawEnthalpy(this.boilerTemp, rhoSatV);
+    const hf = rawEnthalpy(this.boilerTemp, rhoSatL);
+    const hfg = hg - hf;
+
+    const qBoiler = qFirebox * (1 - c.superheaterHeatFraction); // kW
+    const qSuper = qFirebox * c.superheaterHeatFraction; // kW
+
+    // Flow: Boiler → Superheater (throttle-controlled)
+    const throttleArea = c.maxThrottleArea * this.throttle;
+    const superRho = this.superMass / c.superheaterVolume;
+    const pSuper = gasPressure(this.superTemp, superRho);
+    let mDotBS = 0;
+    if (pBoiler > c.pAtm) {
+      const mDotBoilerToSuper = orificeFlow(
+        pBoiler,
+        pSuper,
+        rhoSatV,
+        throttleArea,
+        c.dischargeCoeff,
+      );
+      mDotBS = min(mDotBoilerToSuper, this.boilerWaterMass / dt);
+    }
+
+    // Update superheater state
+    // (super→chest flow is handled by stepEngine at fine resolution;
+    //  superMass already reflects those drains)
+    const newSuperMass = max(1e-6, this.superMass + mDotBS * dt);
+    const mSuperIn = mDotBS * dt;
+    if (newSuperMass > 1e-5) {
+      this.superTemp =
+        (this.superMass * this.superTemp + mSuperIn * this.boilerTemp) /
+        newSuperMass;
+    }
+    if (qSuper > 0 && newSuperMass > 0.01) {
+      const cpSteam = 2.0; // kJ/(kg·K) approximate
+      this.superTemp += (qSuper * dt) / (newSuperMass * cpSteam);
+    }
+    this.superTemp = max(c.tAtm, this.superTemp);
+    this.superMass = newSuperMass;
+
+    // Update boiler
+    this.boilerWaterMass = max(0, this.boilerWaterMass - mDotBS * dt);
+    const qLoss = c.boilerHeatTransferCoeff * c.boilerSurfaceArea
+      * (this.boilerTemp - c.tAtm); // kW
+    const qNetBoiler = qBoiler - mDotBS * hfg - qLoss;
+    if (this.boilerWaterMass > 0) {
+      const dTBoiler = (qNetBoiler * dt) / (this.boilerWaterMass * 4.2);
+      this.boilerTemp = max(c.tAtm, this.boilerTemp + dTBoiler);
+      this.boilerTemp = min(this.boilerTemp, 640);
+    }
+
+    // Blow-down valve
+    if (this.blowdown > 0) {
+      const pGauge = max(0, pBoiler - c.pAtm);
+      const pFrac = pGauge / (c.maxBoilerPressure - c.pAtm);
+      const flow = c.blowdownMaxFlow * this.blowdown * pFrac;
+      if (this.boilerWaterMass > 0) {
+        const drained = min(flow * dt, this.boilerWaterMass);
+        this.boilerWaterMass -= drained;
+      } else if (this.boilerTemp > c.tAtm) {
+        const steamMass = c.boilerVolume * rhosatVap(this.boilerTemp);
+        const ventMass = min(flow * dt, steamMass);
+        if (steamMass > 0.01) {
+          const fracVented = ventMass / steamMass;
+          const dT = fracVented * (this.boilerTemp - c.tAtm);
+          this.boilerTemp = max(c.tAtm, this.boilerTemp - dT);
+        } else {
+          this.boilerTemp = c.tAtm;
+        }
+      }
+    }
+
+    // Manifold thermal dynamics
+    const qManifold = c.manifoldHeatTransfer * (this.boilerTemp - this.manifoldTemp);
+    const prevManifoldTemp = this.manifoldTemp;
+    this.manifoldTemp += (qManifold * dt) / (c.manifoldMass * c.manifoldCp);
+    this.manifoldTemp = max(c.tAtm, this.manifoldTemp);
+    this.manifoldDTdt = (this.manifoldTemp - prevManifoldTemp) / dt;
+
+    const thermalStress = c.manifoldStressPerK * abs(this.manifoldDTdt) * dt;
+    const pGauge = max(0, pBoiler - c.pAtm);
+    const pressureStress = c.manifoldPressureStress * pGauge * dt;
+    this.manifoldStress += thermalStress + pressureStress;
+
+    if (this.manifoldStress >= c.manifoldStressLimit) {
+      this.exploded = true;
+    }
+
+    // Pressure relief valve (pop-type with hysteresis)
+    this.boilerPressure = max(c.pAtm, psat(this.boilerTemp));
+    const reliefClose = c.maxBoilerPressure - c.reliefValveHysteresis;
+    if (this.boilerPressure > c.maxBoilerPressure) {
+      this.reliefValveOpen = true;
+    } else if (this.boilerPressure < reliefClose) {
+      this.reliefValveOpen = false;
+    }
+    if (this.reliefValveOpen && this.boilerTemp > c.tAtm) {
+      const overP = max(0, this.boilerPressure - c.maxBoilerPressure);
+      const propFrac = min(1, overP / c.reliefValveResponse);
+      const ventFrac = max(c.reliefValveMinFrac, propFrac);
+      const ventRate = c.reliefValveMaxFlow * ventFrac;
+      const vented = ventRate * dt;
+      if (this.boilerWaterMass > 0 && hfg > 0) {
+        const energyRemoved = vented * hfg;
+        const dT = energyRemoved / (this.boilerWaterMass * 4.2);
+        this.boilerTemp = max(c.tAtm, this.boilerTemp - dT);
+      }
+      this.boilerPressure = max(c.pAtm, psat(this.boilerTemp));
+    }
+
+    // Instrumentation
     this.steamRate = mDotBS;
     this.fireboxHeat = qFirebox;
+  }
+
+  /**
+   * Advance the full simulation by dt seconds (lockstep — both sims
+   * at the same rate). Backward-compatible with existing callers.
+   * @param {number} dt - Time step [s]
+   */
+  step(dt) {
+    this.stepEngine(dt);
+    this.stepBoiler(dt);
   }
 
   /** Current state snapshot for logging / display. */
@@ -684,9 +708,9 @@ export class Locomotive {
       wheelSlip: this.wheelSlip,
       steamRate: this.steamRate,
       fireboxHeat: this.fireboxHeat,
-      cutoff: abs(this[JOHNSON_BAR]) * this.cfg.maxCutoff,
+      cutoff: abs(this.johnsonBar) * this.cfg.maxCutoff,
       throttle: this.throttle,
-      [JOHNSON_BAR]: this[JOHNSON_BAR],
+      johnsonBar: this.johnsonBar,
       tenderCoal: this.tenderCoal,
       tenderWater: this.tenderWater,
       fireboxCoal: this.fireboxCoal,
