@@ -20,6 +20,7 @@ export const DEFAULTS = {
   // Boiler — CPRR #60 "Jupiter" (Schenectady, 1868)
   boilerVolume: 2.8, // m³ total internal volume (est. from ~850 sq ft heating surface)
   boilerWaterMass: 1800, // kg (~1.8 m³ at normal working level)
+  boilerMaxWater: 2400, // kg — full glass; beyond this injector shuts off
   boilerTemp: 300, // K initial temperature (ambient)
 
   // Manifold (steam dome + main steam pipe, cast iron)
@@ -95,7 +96,7 @@ export const DEFAULTS = {
   fireboxMaxCoal: 80, // kg capacity on grate (wood is bulky, burns fast)
   fireboxInitialCoal: 0, // kg (cold start)
   shovelRate: 0.8, // kg/s — wood is lighter, tossed in by the armload
-  maxBurnRate: 0.15, // kg/s at full draught (~540 kg/hr, wood burns fast)
+  maxBurnRate: 0.28, // kg/s at full draught (~1000 kg/hr, wood burns fast)
   coalEnergy: 7000, // kJ/kg effective (cordwood ~14 MJ/kg gross × ~50% efficiency)
 
   // Ash — wood ash is ~1–2% by mass, accumulates on grate
@@ -103,8 +104,26 @@ export const DEFAULTS = {
   ashMaxKg: 20, // kg — grate is fully choked at this level
   ashShakeFraction: 0.35, // fraction of ash removed per grate shake
 
+  // Airflow and draft
+  naturalDraft: 0.3, // baseline chimney stack effect (hot gas rises)
+  blowerMaxFlow: 0.08, // kg/s — steam consumed at full blower
+  blowerDraftFactor: 0.6, // draft contribution at full blower (0–1)
+  exhaustDraftMax: 1.0, // draft at max engine steam flow
+  exhaustDraftRef: 2.0, // kg/s engine steam flow for full exhaust draft
+  minAirForIgnition: 0.05, // below this airFactor, fire goes out
+
   // Injector
-  injectorMaxFlow: 2.5, // kg/s max cold water flow
+  // Injector — Giffard-type steam injector (no moving parts)
+  injectorMaxFlow: 2.5, // kg/s delivery rate when caught
+  injectorMinPressure: 275, // kPa absolute (~25 psi gauge) — won't catch below this
+  injectorBodyMass: 30, // kg — cast iron/brass body thermal mass
+  injectorBodyCp: 0.5, // kJ/(kg·K) — specific heat of body
+  injectorBodyHeatRate: 8, // kW — heat absorbed from steam during operation
+  injectorBodyCoolRate: 0.15, // kW/K — convective cooling to ambient when off
+  injectorMaxBodyTemp: 340, // K (~67°C) — fails above this (condensation ineffective)
+  injectorCatchBodyTemp: 330, // K (~57°C) — must cool below this to re-catch
+  injectorKnockOffSpeed: 20, // m/s (~45 mph) — vibration knock-off becomes likely
+  injectorKnockOffRate: 0.02, // probability per second at knockOffSpeed
 
   // Blow-down valve — drains boiler water from bottom
   blowdownMaxFlow: 4, // kg/s at full boiler pressure
@@ -202,7 +221,13 @@ export class Locomotive {
     this.manualDoorOpen = false; // player-controlled door override
     this.coalMin = 0; // 0–1 fraction: start shoveling below this
     this.coalMax = 0; // 0–1 fraction: stop shoveling above this (0 = disabled)
-    this.injectorThrottle = 0; // 0–1
+    this.damper = 1; // 0–1 ashpan damper opening (1 = fully open)
+    this.blower = 0; // 0–1 blower valve opening (0 = off)
+    this.injectorValve = 0; // 0–1 valve opening (player-controlled)
+    this.injectorActive = false; // injector has caught and is delivering water
+    this.injectorBodyTemp = c.tAtm; // K — body temperature (rises during use)
+    this.injectorCatchCenter = 0.5; // current catch band center (0–1)
+    this.injectorCatchWidth = 0.4; // current catch band half-width
     this.blowdown = 0; // 0–1 blow-down valve opening
     this.brake = 0; // 0–1 brake application
 
@@ -217,6 +242,7 @@ export class Locomotive {
     this.appliedTE = 0; // TE after adhesion limit
     this.steamRate = 0;
     this._engineSteamDemand = 0; // kg/s — last engine step's chest draw
+    this._smoothedExhaustRate = 0; // kg/s — EMA of exhaust for draft calc
     this.fireboxHeat = 0; // kW entering the boiler
     this.reliefValveOpen = false;
   }
@@ -454,6 +480,10 @@ export class Locomotive {
 
     // Engine outputs — available to boiler sim and instrumentation
     this._engineSteamDemand = totalMDotFromChest;
+    // Exhaust draft responds to cumulative puffs, not instantaneous valve state.
+    // EMA with ~1s time constant smooths over several crank revolutions.
+    const alpha = 1 - Math.exp(-dt / 1.0);
+    this._smoothedExhaustRate += alpha * (totalMDotFromChest - this._smoothedExhaustRate);
     this.totalTE = totalTE;
     this.appliedTE = appliedTE;
   }
@@ -506,19 +536,37 @@ export class Locomotive {
       }
     }
 
+    // Draft — natural stack effect + blower supplement, or exhaust blast
+    // Natural draft and blower are additive (blower supplements stack effect).
+    // Exhaust blast, when present, dominates both.
+    const exhaustDraft = min(1, this._smoothedExhaustRate / c.exhaustDraftRef)
+                         * c.exhaustDraftMax;
+    const blowerDraft = this.blower * c.blowerDraftFactor;
+    const draft = max(c.naturalDraft + blowerDraft, exhaustDraft);
+
+    // Blower steam consumption (drawn from superheater mass)
+    if (this.blower > 0) {
+      const blowerFlow = this.blower * c.blowerMaxFlow * dt;
+      const drawn = min(blowerFlow, this.superMass);
+      this.superMass = max(1e-6, this.superMass - drawn);
+    }
+
     // Firebox
     let qFirebox = 0;
     if (this.ignited && this.fireboxCoal > 0) {
       const doorFactor = this.fireboxDoorOpen ? 1.0 : 0.7;
       const ashChoke = 1 - min(1, this.fireboxAsh / c.ashMaxKg);
-      const airFactor = doorFactor * ashChoke;
+      const airFactor = this.damper * draft * doorFactor * ashChoke;
       const coalFraction = min(1, this.fireboxCoal / (c.fireboxMaxCoal * 0.3));
       this.burnRate = c.maxBurnRate * coalFraction * airFactor;
       const burned = min(this.burnRate * dt, this.fireboxCoal);
       this.fireboxCoal -= burned;
       this.fireboxAsh = min(this.fireboxAsh + burned * c.ashFraction, c.ashMaxKg);
       qFirebox = (burned / dt) * c.coalEnergy; // kW
-      if (this.fireboxCoal < 0.001) {
+      if (airFactor < c.minAirForIgnition) {
+        this.ignited = false;
+        this.burnRate = 0;
+      } else if (this.fireboxCoal < 0.001) {
         this.fireboxCoal = 0;
         this.ignited = false;
         this.burnRate = 0;
@@ -528,18 +576,83 @@ export class Locomotive {
       if (this.fireboxCoal <= 0) this.ignited = false;
     }
 
-    // Injector: add cold tender water to boiler
-    if (this.injectorThrottle > 0 && this.tenderWater > 0) {
-      const injFlow = c.injectorMaxFlow * this.injectorThrottle;
-      const waterAdded = min(injFlow * dt, this.tenderWater);
-      const oldMass = this.boilerWaterMass;
-      this.boilerWaterMass += waterAdded;
-      this.tenderWater -= waterAdded;
-      if (this.boilerWaterMass > 0) {
-        const mixTemp =
-          (this.boilerTemp * oldMass + c.tAtm * waterAdded) /
-          this.boilerWaterMass;
-        this.boilerTemp = max(c.tAtm, mixTemp);
+    // Injector — Giffard-type steam injector with valve-position catch band.
+    // The player manipulates a steam valve (0–1). The injector catches only
+    // when the valve is within a "sweet spot" that shifts with conditions:
+    // higher pressure widens and lowers the band, hot body narrows it,
+    // high speed adds jitter. Too little steam: no energy. Too much: jet
+    // breaks up. Once caught, the band is slightly wider (hysteresis).
+    const pBoilerNow = psat(this.boilerTemp);
+
+    // Compute current catch band from operating conditions.
+    // Pressure factor: 0 at min pressure, 1 at full operating pressure.
+    const pFrac = max(0, (pBoilerNow - c.injectorMinPressure)
+      / (c.maxBoilerPressure - c.injectorMinPressure));
+    // Body heat penalty: narrows band as body approaches failure temp.
+    const bodyFrac = max(0, 1 - (this.injectorBodyTemp - c.tAtm)
+      / (c.injectorMaxBodyTemp - c.tAtm));
+    // Catch band center: lower pressure needs more valve opening.
+    // At full pressure center ~0.35, at min pressure center ~0.70.
+    this.injectorCatchCenter = 0.70 - 0.35 * pFrac;
+    // Half-width: wide at good conditions, narrow at marginal.
+    // Base 0.25 at full pressure/cold body, shrinks toward 0.05.
+    this.injectorCatchWidth = max(0.05, 0.25 * pFrac * bodyFrac);
+
+    const valveInBand = this.injectorValve > 0.01
+      && abs(this.injectorValve - this.injectorCatchCenter) <= this.injectorCatchWidth;
+    const canOperate = pBoilerNow >= c.injectorMinPressure
+      && this.injectorBodyTemp < c.injectorMaxBodyTemp
+      && this.tenderWater > 0
+      && this.boilerWaterMass < c.boilerMaxWater;
+
+    if (this.injectorActive) {
+      // Once caught, allow slightly wider band (hysteresis)
+      const hyst = 1.3;
+      const stillInBand = this.injectorValve > 0.01
+        && abs(this.injectorValve - this.injectorCatchCenter)
+           <= this.injectorCatchWidth * hyst;
+
+      let knockedOff = !stillInBand || !canOperate;
+
+      // Vibration knock-off (probabilistic)
+      if (!knockedOff && abs(this.velocity) > 1) {
+        const speedFrac = abs(this.velocity) / c.injectorKnockOffSpeed;
+        const pKnock = 1 - Math.pow(
+          1 - c.injectorKnockOffRate * speedFrac * speedFrac, dt);
+        if (Math.random() < pKnock) knockedOff = true;
+      }
+
+      if (knockedOff) {
+        this.injectorActive = false;
+      } else {
+        // Delivering water — arrives warm from steam condensation (~98% eff)
+        const injFlow = c.injectorMaxFlow;
+        const room = c.boilerMaxWater - this.boilerWaterMass;
+        const waterAdded = min(injFlow * dt, this.tenderWater, room);
+        const oldMass = this.boilerWaterMass;
+        this.boilerWaterMass += waterAdded;
+        this.tenderWater -= waterAdded;
+        if (this.boilerWaterMass > 0) {
+          const feedTemp = min(353, this.boilerTemp);
+          const mixTemp =
+            (this.boilerTemp * oldMass + feedTemp * waterAdded) /
+            this.boilerWaterMass;
+          this.boilerTemp = max(c.tAtm, mixTemp);
+        }
+        // Body absorbs heat from steam passage
+        this.injectorBodyTemp +=
+          (c.injectorBodyHeatRate * dt) / (c.injectorBodyMass * c.injectorBodyCp);
+      }
+    } else {
+      // Body cools toward ambient when not operating
+      const dTCool = c.injectorBodyCoolRate * (this.injectorBodyTemp - c.tAtm) * dt
+        / (c.injectorBodyMass * c.injectorBodyCp);
+      this.injectorBodyTemp = max(c.tAtm, this.injectorBodyTemp - dTCool);
+
+      // Catch if valve is in the sweet spot and conditions allow
+      if (valveInBand && canOperate
+          && this.injectorBodyTemp < c.injectorCatchBodyTemp) {
+        this.injectorActive = true;
       }
     }
 
@@ -720,6 +833,13 @@ export class Locomotive {
       numCars: this.numCars,
       ignited: this.ignited,
       reliefValveOpen: this.reliefValveOpen,
+      injectorActive: this.injectorActive,
+      injectorBodyTemp: this.injectorBodyTemp,
+      injectorCatchCenter: this.injectorCatchCenter,
+      injectorCatchWidth: this.injectorCatchWidth,
+      injectorValve: this.injectorValve,
+      damper: this.damper,
+      blower: this.blower,
     };
   }
 }

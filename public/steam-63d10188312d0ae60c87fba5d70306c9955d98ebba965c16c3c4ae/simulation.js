@@ -8,9 +8,10 @@ const DT_ENGINE = 0.005; // engine physics timestep [s]
 const DT_BOILER = 0.05;  // boiler thermodynamics timestep [s]
 const ENGINE_PER_BOILER = Math.round(DT_BOILER / DT_ENGINE); // 10:1 ratio
 
-// Calm timer time constant: geometric ramp from 1× to 60×.
-// At t=0 → 1×, t=30s → ~38×, t=60s → ~53×, t=120s → ~59×
-const CALM_TAU = 30; // seconds — controls steepness of ramp
+// Calm timer time constant: logistic ramp from 1× to 60×.
+// Slow start, gradual inflection, then plateau.
+const CALM_TAU = 60; // seconds — midpoint of logistic curve
+const CALM_K = 0.06; // steepness of logistic transition
 
 export class Simulation {
   constructor(locoConfig = {}) {
@@ -29,6 +30,9 @@ export class Simulation {
 
     // Speed override: null = auto, number = fixed multiplier
     this.simSpeedOverride = null;
+
+    // Accumulated sim-time not yet stepped
+    this._simTimeAccum = 0;
   }
 
   get cfg() { return this.loco.cfg; }
@@ -69,8 +73,9 @@ export class Simulation {
     if (loco.throttle !== this._prevThrottle) return true;
     if (loco.brake !== this._prevBrake) return true;
 
-    // Below 15 mph — keep calm timer zeroed so it starts fresh at cruising speed
-    if (Math.abs(loco.velocity) * 3.6 < 24) return true;
+    // Below 15 mph — keep calm timer zeroed unless warming up stationary
+    const spdKmh = Math.abs(loco.velocity) * 3.6;
+    if (spdKmh < 24 && !(spdKmh <= 1 && loco.throttle === 0 && loco.ignited)) return true;
 
     // Low resources
     const cfg = loco.cfg;
@@ -90,26 +95,27 @@ export class Simulation {
     const pFrac = Math.max(0, (loco.boilerPressure - cfg.pAtm) /
       (cfg.maxBoilerPressure - cfg.pAtm));
 
-    // Stationary with fire burning → fast forward through warmup
-    // (not subject to calm timer — warmup is always boring)
+    // Logistic ramp: f(t) = 1 / (1 + exp(-k*(t - τ)))
+    // Starts near 0, inflects at t=τ, saturates near 1.
+    // At t=0 → ~0.03, t=30s → ~0.14, t=60s → 0.50, t=120s → ~0.97
+    const logistic = (t) => 1 / (1 + Math.exp(-CALM_K * (t - CALM_TAU)));
+
+    // Stationary with fire burning → ramp based on time since ignition
     if (spdKmh <= 1 && loco.throttle === 0) {
       if (loco.ignited) {
-        const distFromTarget = Math.max(0, 1 - pFrac);
-        let base = 1 + (MAX_SIM_SPEED - 1) * distFromTarget;
+        const ramp = logistic(this.calmTime);
+        let base = 1 + (MAX_SIM_SPEED - 1) * ramp;
         base *= this._resourceMultiplier();
         return Math.max(1, Math.round(base));
       }
-      // Fire out — player needs to act
       return 1;
     }
 
-    // Stay at 1× until above 15 mph (~24 km/h) so the player can enjoy acceleration
+    // Stay at 1× until above 15 mph (~24 km/h)
     if (spdKmh < 24) return 1;
 
-    // Cruising: geometric ramp based on calm timer.
-    // speed(t) = 1 + (MAX-1) * (1 - exp(-t/τ))
-    // At t=0 → 1×, t=30s → ~38×, t=60s → ~53×, t=120s → ~59×
-    let base = 1 + (MAX_SIM_SPEED - 1) * (1 - Math.exp(-this.calmTime / CALM_TAU));
+    // Cruising: logistic ramp based on calm timer
+    let base = 1 + (MAX_SIM_SPEED - 1) * logistic(this.calmTime);
     base *= this._resourceMultiplier();
 
     return Math.max(1, Math.round(base));
@@ -137,13 +143,14 @@ export class Simulation {
       : this.autoSimSpeed();
 
     // Bicameral stepping: engine runs at fine resolution (DT_ENGINE),
-    // boiler at coarser resolution (DT_BOILER). For each boiler step,
-    // ENGINE_PER_BOILER engine steps run first, then one boiler step.
-    const simElapsed = elapsed * this.simSpeed;
+    // boiler at coarser resolution (DT_BOILER). Accumulate sim-time
+    // across frames so no time is lost to rounding.
+    this._simTimeAccum += elapsed * this.simSpeed;
     const boilerSteps = Math.min(
-      Math.round(simElapsed / DT_BOILER),
+      Math.floor(this._simTimeAccum / DT_BOILER),
       200,
     );
+    this._simTimeAccum -= boilerSteps * DT_BOILER;
 
     for (let b = 0; b < boilerSteps; b++) {
       for (let e = 0; e < ENGINE_PER_BOILER; e++) {

@@ -26,7 +26,7 @@ const CLAPPER_LIMIT = 0.40; // max angle offset from bell [rad] (~23°)
 const G = 9.81;
 
 // Continuous pull torque [rad/s²] applied while cord is held.
-const PULL_TORQUE = 18;
+const PULL_TORQUE = 10;
 
 // Bell tone partials
 // Ratios relative to strike note, modeled on a typical American
@@ -73,6 +73,7 @@ export class BellSynth {
   ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
   }
 
   _buildGraph() {
@@ -154,7 +155,6 @@ export class BellSynth {
   pullStart() {
     if (!this._ctx) return;
     this._buildGraph();
-    if (this._ctx.state === "suspended") this._ctx.resume();
     this._pulling = true;
   }
 

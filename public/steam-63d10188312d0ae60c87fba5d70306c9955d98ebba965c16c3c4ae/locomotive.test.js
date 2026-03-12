@@ -47,7 +47,7 @@ describe("Locomotive construction", () => {
     assert.equal(loco.throttle, 0);
     assert.equal(loco.johnsonBar, 1 / 3); // forward, ~25% cutoff
     assert.equal(loco.fireboxDoorOpen, false);
-    assert.equal(loco.injectorThrottle, 0);
+    assert.equal(loco.injectorValve, 0);
   });
 });
 
@@ -183,22 +183,61 @@ describe("Firebox and tender", () => {
 });
 
 describe("Injector", () => {
-  it("transfers water from tender to boiler", () => {
-    const loco = new Locomotive();
+  it("catches when valve is in the sweet spot at sufficient pressure", () => {
+    const loco = new Locomotive({ boilerTemp: 473.15 });
     const tenderBefore = loco.tenderWater;
     const boilerBefore = loco.boilerWaterMass;
-    loco.injectorThrottle = 1;
-    loco.step(0.1);
+    // Step once to compute catch band, then set valve to center
+    loco.step(0.01);
+    loco.injectorValve = loco.injectorCatchCenter;
+    for (let t = 0; t < 1; t += 0.01) loco.step(0.01);
+    assert.ok(loco.injectorActive, "injector should catch in sweet spot");
     assert.ok(loco.tenderWater < tenderBefore, "tender water decreases");
     assert.ok(loco.boilerWaterMass > boilerBefore, "boiler water increases");
   });
 
-  it("cold water cools a hot boiler", () => {
+  it("does not catch when valve is outside the band", () => {
     const loco = new Locomotive({ boilerTemp: 473.15 });
-    const tempBefore = loco.boilerTemp;
-    loco.injectorThrottle = 1;
+    loco.step(0.01);
+    // Set valve well outside the catch band
+    loco.injectorValve = 0.99;
     loco.step(0.1);
-    assert.ok(loco.boilerTemp < tempBefore, "boiler should cool");
+    assert.ok(!loco.injectorActive, "injector should not catch outside band");
+  });
+
+  it("does not catch at low boiler pressure", () => {
+    const loco = new Locomotive({ boilerTemp: 380 });
+    loco.injectorValve = 0.5;
+    loco.step(0.1);
+    assert.ok(!loco.injectorActive, "injector should not catch at low pressure");
+  });
+
+  it("knocks off when body overheats from prolonged use", () => {
+    const loco = new Locomotive({ boilerTemp: 473.15 });
+    loco.step(0.01);
+    loco.injectorValve = loco.injectorCatchCenter;
+    let everKnockedOff = false;
+    for (let t = 0; t < 120; t += 0.05) {
+      // Track the drifting catch center to keep the valve in-band
+      loco.injectorValve = loco.injectorCatchCenter;
+      loco.step(0.05);
+      if (!loco.injectorActive && loco.injectorBodyTemp >= loco.cfg.injectorMaxBodyTemp) {
+        everKnockedOff = true;
+        break;
+      }
+    }
+    assert.ok(everKnockedOff, "injector should knock off from body overheat");
+  });
+
+  it("catch band narrows with hot body", () => {
+    const loco = new Locomotive({ boilerTemp: 473.15 });
+    loco.step(0.01);
+    const coldWidth = loco.injectorCatchWidth;
+    // Heat up the body near max
+    loco.injectorBodyTemp = loco.cfg.injectorMaxBodyTemp - 5;
+    loco.step(0.01);
+    assert.ok(loco.injectorCatchWidth < coldWidth,
+      "catch band should narrow as body heats up");
   });
 });
 
@@ -466,6 +505,84 @@ describe("boiler heat loss", () => {
     assert.ok(reached, `should reach ${targetPsig} psig within 6 hours`);
     // Sanity: should take at least 15 minutes (not instant)
     assert.ok(reachedAt > 900, `should take >15 min, took ${(reachedAt/60).toFixed(0)} min`);
+  });
+});
+
+describe("Damper and blower", () => {
+  it("defaults: damper open, blower off", () => {
+    const loco = new Locomotive();
+    assert.equal(loco.damper, 1);
+    assert.equal(loco.blower, 0);
+  });
+
+  it("closing damper reduces burn rate", () => {
+    const locoOpen = new Locomotive({ fireboxInitialCoal: 50 });
+    locoOpen.ignite();
+    locoOpen.manualDoorOpen = true;
+    locoOpen.damper = 1;
+    locoOpen.step(0.01);
+    const rateOpen = locoOpen.burnRate;
+
+    const locoClosed = new Locomotive({ fireboxInitialCoal: 50 });
+    locoClosed.ignite();
+    locoClosed.manualDoorOpen = true;
+    locoClosed.damper = 0.2;
+    locoClosed.step(0.01);
+    const rateClosed = locoClosed.burnRate;
+
+    assert.ok(rateClosed < rateOpen,
+      `damper=0.2 rate (${rateClosed}) should be less than damper=1.0 rate (${rateOpen})`);
+  });
+
+  it("fully closing damper extinguishes fire", () => {
+    const loco = new Locomotive({ fireboxInitialCoal: 50 });
+    loco.ignite();
+    loco.damper = 0;
+    for (let i = 0; i < 10; i++) loco.step(0.01);
+    assert.equal(loco.ignited, false, "fire should go out with damper fully closed");
+  });
+
+  it("blower increases burn rate when stationary", () => {
+    const locoNoBlower = new Locomotive({ fireboxInitialCoal: 50 });
+    locoNoBlower.ignite();
+    locoNoBlower.manualDoorOpen = true;
+    locoNoBlower.blower = 0;
+    locoNoBlower.step(0.01);
+    const rateNoBlower = locoNoBlower.burnRate;
+
+    const locoBlower = new Locomotive({ fireboxInitialCoal: 50 });
+    locoBlower.ignite();
+    locoBlower.manualDoorOpen = true;
+    locoBlower.blower = 1;
+    locoBlower.step(0.01);
+    const rateBlower = locoBlower.burnRate;
+
+    assert.ok(rateBlower > rateNoBlower,
+      `blower rate (${rateBlower}) should exceed no-blower rate (${rateNoBlower})`);
+  });
+
+  it("blower consumes steam from superheater", () => {
+    // Hot boiler with throttle cracked open to populate the superheater
+    const loco = new Locomotive({ boilerTemp: 473.15 });
+    loco.throttle = 0.1;
+    for (let i = 0; i < 200; i++) loco.step(0.1);
+    loco.throttle = 0; // close throttle so no new steam enters super
+    const massBefore = loco.superMass;
+    assert.ok(massBefore > 0.01, `need superheater steam, got ${massBefore}`);
+    loco.blower = 1;
+    loco.step(1);
+    assert.ok(loco.superMass < massBefore,
+      `blower should drain super: before=${massBefore}, after=${loco.superMass}`);
+  });
+
+  it("snapshot includes damper and blower", () => {
+    const loco = new Locomotive();
+    loco.damper = 0.5;
+    loco.blower = 0.3;
+    loco.step(0.01);
+    const snap = loco.snapshot();
+    assertNear(snap.damper, 0.5, 1e-6, "damper in snapshot");
+    assertNear(snap.blower, 0.3, 1e-6, "blower in snapshot");
   });
 });
 

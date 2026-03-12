@@ -272,6 +272,7 @@ export class WhistleSynth {
   ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
   }
 
   _buildGraph() {
@@ -414,10 +415,6 @@ export class WhistleSynth {
   setOpening(opening) {
     if (!this._ctx) return;
     this._buildGraph();
-
-    if (this._ctx.state === "suspended") {
-      this._ctx.resume();
-    }
 
     const now = this._ctx.currentTime;
     const rawOpening = Math.max(0, Math.min(1, opening));

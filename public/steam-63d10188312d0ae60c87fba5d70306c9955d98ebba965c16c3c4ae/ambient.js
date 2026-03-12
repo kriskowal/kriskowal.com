@@ -29,6 +29,8 @@ const BRAKE_SPEED_CROSSOVER = 3; // m/s — below this, grind dominates
 
 const FIRE_MASTER = 0.30;
 const FIRE_DOOR_CLOSED_ATTEN = 0.55;
+const FIRE_EXHAUST_ATTEN = 0.25; // floor — fire stays faintly audible under full exhaust
+const FIRE_EXHAUST_REF = 1.5; // kg/s steam rate for full exhaust masking
 const FIRE_SMOOTHING = 0.08;
 const FIRE_LOOP_URL = "fire-loop.mp3";
 const FIRE_CROSSFADE = 0.15; // seconds of crossfade at loop boundary
@@ -65,21 +67,45 @@ const CLANK_NOISE_DECAY = 0.02;
 const CLANK_DELAY = 0.10; // seconds after squeak starts
 
 // Blowdown
-// Hot water flashing to steam (low rumble) transitioning to
-// dry steam vent (high hiss) as water runs out.
+// Venting steam through the blow-down valve or relief valve.
+// Steady hiss proportionate to valve opening and boiler pressure.
 
-const BLOW_WATER_BANDS = [
-  { freq: 200, Q: 0.7, gain: 0.40 },
-  { freq: 500, Q: 0.5, gain: 0.35 },
-  { freq: 900, Q: 0.4, gain: 0.20 },
+const BLOW_BANDS = [
+  { freq: 800,  Q: 0.5, gain: 0.25 },
+  { freq: 2000, Q: 0.4, gain: 0.40 },
+  { freq: 5000, Q: 0.3, gain: 0.25 },
+  { freq: 9000, Q: 0.3, gain: 0.10 },
 ];
-const BLOW_STEAM_BANDS = [
-  { freq: 1500, Q: 0.6, gain: 0.25 },
-  { freq: 3500, Q: 0.5, gain: 0.35 },
-  { freq: 7000, Q: 0.4, gain: 0.20 },
+const BLOW_MASTER = 0.18;
+const BLOW_SMOOTHING = 0.06;
+
+// Blower
+// Steam jet directed up the smokestack to create artificial draft.
+// Steady hiss pitched between the blowdown rumble and brake screech,
+// with a slight turbulent flutter from the jet impinging on the
+// petticoat pipe.
+
+const BLOWER_BANDS = [
+  { freq: 2000, Q: 0.4, gain: 0.35 },
+  { freq: 5000, Q: 0.3, gain: 0.45 },
+  { freq: 9000, Q: 0.3, gain: 0.20 },
 ];
-const BLOW_MASTER = 0.35;
-const BLOW_SMOOTHING = 0.04;
+const BLOWER_MASTER = 0.12;
+const BLOWER_SMOOTHING = 0.10;
+
+// Injector
+// A Giffard injector uses a steam jet to force water into the boiler.
+// When "caught", the combining cone produces a steady mid-high hiss
+// as steam condenses into the water stream. Quieter than the blower
+// since the steam is doing work rather than venting freely.
+
+const INJECTOR_BANDS = [
+  { freq: 1400, Q: 0.5, gain: 0.30 },
+  { freq: 3500, Q: 0.4, gain: 0.45 },
+  { freq: 7000, Q: 0.3, gain: 0.25 },
+];
+const INJECTOR_MASTER = 0.07;
+const INJECTOR_SMOOTHING = 0.05;
 
 // Sand
 // Brief smooth burst of high-frequency noise — sand pouring from
@@ -105,6 +131,8 @@ export class AmbientSynth {
     this._shovel = null;
     this._clank = null;
     this._blow = null;
+    this._blowerHiss = null;
+    this._injectorHiss = null;
     this._sand = null;
     this._wasSandDropping = false;
     this._wasDoorOpen = false;
@@ -115,6 +143,7 @@ export class AmbientSynth {
   ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
   }
 
   _buildGraph() {
@@ -146,6 +175,8 @@ export class AmbientSynth {
     this._shovel = this._buildSampleLoop(ctx, dryGain, convolver);
     this._clank = this._buildClank(ctx, dryGain);
     this._blow = this._buildBlow(ctx, noise, dryGain, convolver);
+    this._blowerHiss = this._buildBlower(ctx, noise, dryGain, convolver);
+    this._injectorHiss = this._buildInjector(ctx, noise, dryGain, convolver);
     this._sand = this._buildSand(ctx, noise, dryGain, convolver);
 
     this._loadSample(FIRE_LOOP_URL, FIRE_CROSSFADE).then(buf => {
@@ -325,15 +356,7 @@ export class AmbientSynth {
     master.connect(dry);
     master.connect(reverb);
 
-    const waterGain = ctx.createGain();
-    waterGain.gain.value = 1;
-    waterGain.connect(master);
-
-    const steamGain = ctx.createGain();
-    steamGain.gain.value = 0;
-    steamGain.connect(master);
-
-    const waterBands = BLOW_WATER_BANDS.map(({ freq, Q, gain }) => {
+    BLOW_BANDS.forEach(({ freq, Q, gain }) => {
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = freq;
@@ -342,11 +365,21 @@ export class AmbientSynth {
       g.gain.value = gain;
       noise.connect(bp);
       bp.connect(g);
-      g.connect(waterGain);
-      return { filter: bp, bandGain: g };
+      g.connect(master);
     });
 
-    const steamBands = BLOW_STEAM_BANDS.map(({ freq, Q, gain }) => {
+    return { master };
+  }
+
+  // Blower sub-graph
+
+  _buildBlower(ctx, noise, dry, reverb) {
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(dry);
+    master.connect(reverb);
+
+    BLOWER_BANDS.forEach(({ freq, Q, gain }) => {
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = freq;
@@ -355,21 +388,33 @@ export class AmbientSynth {
       g.gain.value = gain;
       noise.connect(bp);
       bp.connect(g);
-      g.connect(steamGain);
-      return { filter: bp, bandGain: g };
+      g.connect(master);
     });
 
-    // Slow LFO for gurgly modulation on water phase
-    const gurgleLFO = ctx.createOscillator();
-    gurgleLFO.type = "sine";
-    gurgleLFO.frequency.value = 2.5;
-    const gurgleDepth = ctx.createGain();
-    gurgleDepth.gain.value = 0.3;
-    gurgleLFO.connect(gurgleDepth);
-    gurgleDepth.connect(waterGain.gain);
-    gurgleLFO.start();
+    return { master };
+  }
 
-    return { master, waterGain, steamGain, waterBands, steamBands };
+  // Injector sub-graph
+
+  _buildInjector(ctx, noise, dry, reverb) {
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(dry);
+    master.connect(reverb);
+
+    INJECTOR_BANDS.forEach(({ freq, Q, gain }) => {
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = freq;
+      bp.Q.value = Q;
+      const g = ctx.createGain();
+      g.gain.value = gain;
+      noise.connect(bp);
+      bp.connect(g);
+      g.connect(master);
+    });
+
+    return { master };
   }
 
   // Sand sub-graph
@@ -461,12 +506,13 @@ export class AmbientSynth {
    * @param {number} p.waterFraction - boilerWaterMass / initialWaterMass (0–1)
    * @param {boolean} p.sandDropping - Sand is being applied
    * @param {boolean} p.reliefValveOpen - Safety valve blowing
+   * @param {number} p.blower         - Blower valve opening 0–1
+   * @param {number} p.steamRate      - Boiler-to-super steam flow [kg/s]
+   * @param {boolean} p.injectorActive - Injector is caught and delivering
    */
   update(p) {
     if (!this._ctx) return;
     this._buildGraph();
-
-    if (this._ctx.state === "suspended") this._ctx.resume();
 
     const now = this._ctx.currentTime;
 
@@ -475,6 +521,8 @@ export class AmbientSynth {
     this._updateShovel(now, p);
     this._updateDoor(now, p);
     this._updateBlow(now, p);
+    this._updateBlower(now, p);
+    this._updateInjector(now, p);
     this._updateSand(now, p);
   }
 
@@ -505,7 +553,7 @@ export class AmbientSynth {
     b.grindGain.gain.setTargetAtTime(BRAKE_GRIND_GAIN * grindMix, now, BRAKE_SMOOTHING);
   }
 
-  _updateFire(now, { fireboxHeat, maxFireboxHeat, doorOpen }) {
+  _updateFire(now, { fireboxHeat, maxFireboxHeat, doorOpen, steamRate }) {
     const f = this._fire;
     if (!this._fireBuffer) return;
 
@@ -519,16 +567,20 @@ export class AmbientSynth {
     }
 
     const doorAtten = doorOpen ? 1.0 : FIRE_DOOR_CLOSED_ATTEN;
-    const vol = intensity * doorAtten * FIRE_MASTER;
+    const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
+    const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
+    const vol = intensity * doorAtten * exhaustAtten * FIRE_MASTER;
     f.master.gain.setTargetAtTime(vol, now, FIRE_SMOOTHING);
   }
 
-  _updateShovel(now, { shoveling, doorOpen }) {
+  _updateShovel(now, { shoveling, doorOpen, steamRate }) {
     const s = this._shovel;
     if (!this._shovelBuffer) return;
 
     const doorAtten = doorOpen ? 1.0 : 0.15;
-    const target = shoveling ? SHOVEL_MASTER * doorAtten : 0;
+    const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
+    const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
+    const target = shoveling ? SHOVEL_MASTER * doorAtten * exhaustAtten : 0;
     s.master.gain.setTargetAtTime(target, now, SHOVEL_SMOOTHING);
   }
 
@@ -540,20 +592,16 @@ export class AmbientSynth {
     }
   }
 
-  _updateBlow(now, { blowdown, boilerPressure, maxPressure, pAtm, waterFraction,
-                      reliefValveOpen }) {
+  _updateBlow(now, { blowdown, boilerPressure, pAtm, reliefValveOpen }) {
     const b = this._blow;
 
-    // Blowdown OR relief valve produces the vent sound
-    const gaugeP = Math.max(0, boilerPressure - pAtm);
-    const maxGaugeP = maxPressure - pAtm;
-    const pFrac = maxGaugeP > 0 ? Math.sqrt(gaugeP / maxGaugeP) : 0;
-
     let opening = blowdown;
-    // Relief valve adds to the vent sound
     if (reliefValveOpen) {
       opening = Math.max(opening, 0.7);
     }
+
+    const gaugeP = Math.max(0, boilerPressure - pAtm);
+    const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
 
     if (opening < 0.01 || pFrac < 0.001) {
       b.master.gain.setTargetAtTime(0, now, BLOW_SMOOTHING);
@@ -562,13 +610,34 @@ export class AmbientSynth {
 
     const vol = opening * pFrac * BLOW_MASTER;
     b.master.gain.setTargetAtTime(vol, now, BLOW_SMOOTHING);
+  }
 
-    // Crossfade: water phase vs steam phase.
-    // waterFraction 1 = full water = water sound.
-    // waterFraction 0 = no water = pure steam vent.
-    const wf = Math.max(0, Math.min(1, waterFraction));
-    b.waterGain.gain.setTargetAtTime(wf, now, BLOW_SMOOTHING);
-    b.steamGain.gain.setTargetAtTime(1 - wf, now, BLOW_SMOOTHING);
+  _updateBlower(now, { blower, boilerPressure, pAtm }) {
+    const b = this._blowerHiss;
+
+    if (blower < 0.01) {
+      b.master.gain.setTargetAtTime(0, now, BLOWER_SMOOTHING);
+      return;
+    }
+
+    const gaugeP = Math.max(0, boilerPressure - pAtm);
+    const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
+    const vol = blower * pFrac * BLOWER_MASTER;
+    b.master.gain.setTargetAtTime(vol, now, BLOWER_SMOOTHING);
+  }
+
+  _updateInjector(now, { injectorActive, boilerPressure, pAtm }) {
+    const inj = this._injectorHiss;
+
+    if (!injectorActive) {
+      inj.master.gain.setTargetAtTime(0, now, INJECTOR_SMOOTHING);
+      return;
+    }
+
+    const gaugeP = Math.max(0, boilerPressure - pAtm);
+    const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
+    const vol = pFrac * INJECTOR_MASTER;
+    inj.master.gain.setTargetAtTime(vol, now, INJECTOR_SMOOTHING);
   }
 
   _updateSand(now, { sandDropping }) {

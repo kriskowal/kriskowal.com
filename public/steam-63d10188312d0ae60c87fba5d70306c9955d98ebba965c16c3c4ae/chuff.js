@@ -66,6 +66,7 @@ export class ChuffSynth {
   ensureContext() {
     if (this._ctx) return;
     this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
   }
 
   _buildGraph(numCylinders) {
@@ -211,10 +212,6 @@ export class ChuffSynth {
     if (!this._ctx) return;
     this._buildGraph(params.numCylinders);
 
-    if (this._ctx.state === "suspended") {
-      this._ctx.resume();
-    }
-
     const now = this._ctx.currentTime;
     const {
       elapsed, animAngle, crankOffset, numCylinders,
@@ -224,7 +221,7 @@ export class ChuffSynth {
 
     const dt = Math.min(elapsed || 0.016, 0.1);
 
-    if (cutoff < 0.01 || direction === 0) {
+    if (cutoff < 0.01 || direction === 0 || chestPressureGauge < 0.1) {
       // No valve motion — silence all, let cylinder pressures decay
       for (let c = 0; c < (this._cylinders?.length || 0); c++) {
         this._cylPressure[c][0] *= Math.max(0, 1 - BLEED_RATE * dt);
