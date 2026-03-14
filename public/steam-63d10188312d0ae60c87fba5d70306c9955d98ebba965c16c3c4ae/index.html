@@ -3,165 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <title>Steam Locomotive</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: monospace; font-size: 14px;
-    background: #1a1a1a; color: #d4d4d4; padding: 16px;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-    max-width: 620px; margin: 0 auto;
-  }
-  h2 { font-size: 15px; color: #aaa; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px; margin-top: 100px; }
-  table, tbody { display: block; width: 100%; margin-bottom: 8px; }
-  tr {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    margin-bottom: 14px;
-  }
-  td { padding: 0; overflow: hidden; }
-  td:first-child {
-    grid-column: 1; grid-row: 1;
-    color: #999; font-size: 12px;
-    white-space: nowrap; line-height: 1.6;
-  }
-  td:nth-child(2) {
-    grid-column: 1 / -1; grid-row: 2;
-    min-width: 0;
-  }
-  td:nth-child(3) {
-    grid-column: 2; grid-row: 1;
-    color: #7c7; font-variant-numeric: tabular-nums;
-    white-space: nowrap; text-align: right;
-    font-size: 12px; line-height: 1.6;
-  }
-  input[type="range"] { width: 100%; height: 24px; accent-color: #c44; display: block; }
-  input[type="range"]:disabled { accent-color: #555; opacity: 0.5; }
-  input[type="checkbox"] { accent-color: #c44; }
-  progress { width: 100%; height: 14px; display: block; }
-  progress::-webkit-progress-bar { background: #333; }
-  progress::-webkit-progress-value { background: #c44; }
-  progress::-moz-progress-bar { background: #c44; }
-  button { font-family: monospace; font-size: 13px; padding: 4px 14px; background: #333; color: #ddd; border: 1px solid #555; cursor: pointer; }
-  button:hover { background: #444; }
-  button:active { background: #555; }
-  .indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #555; }
-  .indicator.on { background: #f72; box-shadow: 0 0 6px #f72; }
-  .indicator.off { background: #333; }
-  .indicator.relief { background: #f33; box-shadow: 0 0 8px #f33; }
-  tr.compact {
-    grid-template-columns: 1fr auto auto;
-    grid-template-rows: auto;
-    align-items: center;
-    margin-bottom: 4px;
-    gap: 0 10px;
-  }
-  tr.compact td:first-child {
-    grid-column: 1; grid-row: 1;
-    font-size: 13px; color: #d4d4d4;
-  }
-  tr.compact td:nth-child(2) {
-    grid-column: 2; grid-row: 1;
-    text-align: right;
-  }
-  tr.compact td:nth-child(3) {
-    grid-column: 3; grid-row: 1;
-    font-size: 13px;
-  }
-  tr.centered {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    justify-items: center;
-    margin-bottom: 4px;
-  }
-  tr.centered td:first-child { display: none; }
-  tr.centered td:nth-child(2) { grid-column: 1; grid-row: 1; }
-  tr.centered td:nth-child(3) { display: none; }
-  .bell-combo {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .bell-combo input[type="range"] { flex: 1; }
-  #units-radios label { white-space: nowrap; margin-right: 6px; }
-  #status { color: #777; margin-top: 8px; font-size: 12px; }
-
-  #bottom-bar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
-    background: #222; border-top: 1px solid #444;
-    padding: 5px 16px; padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
-    font-size: 13px;
-    display: flex; align-items: center; justify-content: center;
-    gap: 10px; flex-wrap: wrap;
-  }
-  #bottom-bar .bar-label { color: #999; }
-  #bottom-bar .bar-sep { width: 1px; height: 14px; background: #444; }
-  #bottom-bar progress { width: 70px; height: 8px; flex-shrink: 0; }
-  #bottom-bar label { white-space: nowrap; margin-right: 2px; font-size: 12px; }
-  .sim-speed-radios { white-space: nowrap; }
-  .bar-fixed { display: inline-block; width: 80px; text-align: right; white-space: nowrap; overflow: hidden; color: #999; }
-  #sim-speed-box {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 2px 8px; border-radius: 4px;
-  }
-  #sim-speed-box.speed-changing {
-    background: rgba(255, 239, 0, 0.2);
-    color: #ffe640;
-    transition: none;
-  }
-  #sim-speed-box.speed-steady {
-    background: transparent;
-    color: #d4d4d4;
-    transition: background 2s ease-out, color 2s ease-out;
-  }
-
-  @media (max-width: 600px) {
-    body { padding: 8px; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); font-size: 15px; max-width: 100%; }
-    input[type="range"] {
-      height: 44px;
-      -webkit-appearance: none; appearance: none;
-      background: transparent;
-    }
-    input[type="range"]::-webkit-slider-runnable-track {
-      height: 8px; background: #444; border-radius: 4px;
-    }
-    input[type="range"]::-moz-range-track {
-      height: 8px; background: #444; border-radius: 4px;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #c44; border: 2px solid #ddd;
-      margin-top: -10px; cursor: pointer;
-    }
-    input[type="range"]::-moz-range-thumb {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #c44; border: 2px solid #ddd;
-      cursor: pointer;
-    }
-    input[type="range"]:disabled::-webkit-slider-thumb {
-      background: #555; border-color: #777;
-    }
-    input[type="range"]:disabled::-moz-range-thumb {
-      background: #555; border-color: #777;
-    }
-    input[type="range"]:disabled::-webkit-slider-runnable-track {
-      background: #333;
-    }
-    input[type="range"]:disabled::-moz-range-track {
-      background: #333;
-    }
-    button { min-height: 44px; padding: 8px 16px; font-size: 15px; }
-    input[type="checkbox"] { width: 22px; height: 22px; }
-    input[type="number"] { min-height: 44px; font-size: 16px; }
-    #bottom-bar { padding: 8px 10px; }
-    #bottom-bar button { min-height: 36px; padding: 4px 10px; font-size: 13px; }
-  }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- 1. Train -->
-<h2>Train</h2>
+<h2 id="s-train">Train</h2>
 <table>
   <tr class="compact">
     <td>total mass</td>
@@ -170,40 +21,41 @@
   </tr>
   <tr class="compact">
     <td><label for="ctl-cars">cars</label></td>
-    <td><input type="number" data-control="cars" id="ctl-cars" min="0" max="14" value="0" style="width: 60px;"></td>
     <td></td>
+    <td><span class="gauge-stepper"><button id="btn-cars-dec">-</button><span id="cars-display">0</span><button id="btn-cars-inc">+</button></span></td>
   </tr>
   <tr class="compact">
     <td>units</td>
-    <td colspan="2" id="units-radios">
-      <label><input type="radio" name="units" value="metric" checked> metric</label>
-      <label><input type="radio" name="units" value="imperial"> imperial</label>
+    <td></td>
+    <td id="units-radios" class="gauge-radios">
+      <label><input type="radio" name="units" value="metric" checked><span>metric</span></label>
+      <label><input type="radio" name="units" value="imperial"><span>imperial</span></label>
     </td>
   </tr>
 </table>
 
 <!-- 2. Ignition -->
-<h2>Ignition</h2>
+<h2 id="s-ignition">Ignition</h2>
 <table>
   <tr>
     <td>wood level</td>
-    <td><progress data-gauge="firebox-coal" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-coal" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-coal-text"></td>
   </tr>
   <tr class="compact">
     <td>fire</td>
-    <td><span data-gauge="fire-indicator" class="indicator off"></span></td>
     <td></td>
+    <td data-gauge="fire-indicator" class="indicator fire off"></td>
   </tr>
   <tr>
     <td>heat output</td>
-    <td><progress data-gauge="firebox-heat" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-heat" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-heat-text"></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-1" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-1" data-control="door" value="open"><span>open</span></label></td>
   </tr>
   <tr>
     <td><label>damper</label></td>
@@ -223,46 +75,46 @@
 </table>
 
 <!-- 3. Raising Steam -->
-<h2>Raising Steam</h2>
+<h2 id="s-raising">Raising Steam</h2>
 <table>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td data-gauge="boiler-temp-label">water temperature</td>
-    <td><progress data-gauge="boiler-temp" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-temp" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-temp-text"></td>
   </tr>
   <tr>
     <td>boiler water level</td>
-    <td><progress data-gauge="boiler-water" value="80" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-water" value="80" max="100"></progress></span></td>
     <td data-gauge="boiler-water-text"></td>
   </tr>
   <tr>
     <td>heat output</td>
-    <td><progress data-gauge="firebox-heat" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-heat" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-heat-text"></td>
   </tr>
   <tr class="compact">
     <td>fire</td>
-    <td><span data-gauge="fire-indicator" class="indicator off"></span></td>
     <td></td>
+    <td data-gauge="fire-indicator" class="indicator fire off"></td>
   </tr>
   <tr>
     <td>tender wood</td>
-    <td><progress data-gauge="tender-coal" value="100" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="tender-coal" value="100" max="100"></progress></span></td>
     <td data-gauge="tender-coal-text"></td>
   </tr>
   <tr class="compact">
     <td>relief valve</td>
-    <td><span data-gauge="relief-indicator" class="indicator off"></span></td>
     <td></td>
+    <td class="gauge-radios door-gauge gauge-readonly" data-gauge="relief-indicator"><label><span class="door-actual" data-relief="closed">&#9660;</span><span>closed</span></label><label><span class="door-actual" data-relief="open">&#9660;</span><span>open</span></label></td>
   </tr>
   <tr>
     <td>manifold temperature</td>
-    <td><progress data-gauge="manifold-temp" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="manifold-temp" value="0" max="100"></progress></span></td>
     <td data-gauge="manifold-temp-text"></td>
   </tr>
   <tr class="compact">
@@ -272,7 +124,7 @@
   </tr>
   <tr>
     <td>cumulative fatigue</td>
-    <td><progress data-gauge="manifold-stress" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="manifold-stress" value="0" max="100"></progress></span></td>
     <td data-gauge="manifold-stress-text"></td>
   </tr>
   <tr>
@@ -298,7 +150,7 @@
 </table>
 
 <!-- 4. Clearance -->
-<h2>Clearance</h2>
+<h2 id="s-clearance">Clearance</h2>
 <table>
   <tr>
     <td><label>whistle</label></td>
@@ -313,26 +165,26 @@
 </table>
 
 <!-- 5. Throttle Up -->
-<h2>Throttle Up</h2>
+<h2 id="s-throttle">Throttle Up</h2>
 <table>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td>chest pressure</td>
-    <td><progress data-gauge="chest-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="chest-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="chest-pressure-text"></td>
   </tr>
   <tr>
     <td>steam flow</td>
-    <td><progress data-gauge="steam-rate" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="steam-rate" value="0" max="100"></progress></span></td>
     <td data-gauge="steam-rate-text"></td>
   </tr>
   <tr>
     <td>speed</td>
-    <td><progress data-gauge="speed-bar" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="speed-bar" value="0" max="100"></progress></span></td>
     <td data-gauge="speed-text"></td>
   </tr>
   <tr class="compact">
@@ -347,17 +199,17 @@
   </tr>
   <tr class="compact">
     <td>wheel slip</td>
-    <td><span data-gauge="slip-indicator" class="indicator off"></span></td>
-    <td data-gauge="slip-text"></td>
+    <td></td>
+    <td data-gauge="slip-text" class="slip-off">SLIPPING</td>
   </tr>
   <tr>
     <td>left cylinder</td>
-    <td><input type="range" data-gauge="piston-left" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-left"></div></div></td>
     <td></td>
   </tr>
   <tr>
     <td>right cylinder</td>
-    <td><input type="range" data-gauge="piston-right" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-right"></div></div></td>
     <td></td>
   </tr>
   <tr>
@@ -371,9 +223,9 @@
     <td data-gauge="valve-gear-text"></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-2" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-2" data-control="door" value="open"><span>open</span></label></td>
   </tr>
   <tr class="centered">
     <td></td>
@@ -383,16 +235,16 @@
 </table>
 
 <!-- 6. Cruise -->
-<h2>Cruise</h2>
+<h2 id="s-cruise">Cruise</h2>
 <table>
   <tr>
     <td>speed</td>
-    <td><progress data-gauge="speed-bar" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="speed-bar" value="0" max="100"></progress></span></td>
     <td data-gauge="speed-text"></td>
   </tr>
   <tr>
     <td>steam flow</td>
-    <td><progress data-gauge="steam-rate" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="steam-rate" value="0" max="100"></progress></span></td>
     <td data-gauge="steam-rate-text"></td>
   </tr>
   <tr class="compact">
@@ -402,37 +254,37 @@
   </tr>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td>boiler water level</td>
-    <td><progress data-gauge="boiler-water" value="80" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-water" value="80" max="100"></progress></span></td>
     <td data-gauge="boiler-water-text"></td>
   </tr>
   <tr>
     <td>tender wood</td>
-    <td><progress data-gauge="tender-coal" value="100" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="tender-coal" value="100" max="100"></progress></span></td>
     <td data-gauge="tender-coal-text"></td>
   </tr>
   <tr>
     <td>tender water</td>
-    <td><progress data-gauge="tender-water" value="100" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="tender-water" value="100" max="100"></progress></span></td>
     <td data-gauge="tender-water-text"></td>
   </tr>
   <tr>
     <td>firebox heat</td>
-    <td><progress data-gauge="firebox-heat" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-heat" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-heat-text"></td>
   </tr>
   <tr>
     <td>left cylinder</td>
-    <td><input type="range" data-gauge="piston-left" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-left"></div></div></td>
     <td></td>
   </tr>
   <tr>
     <td>right cylinder</td>
-    <td><input type="range" data-gauge="piston-right" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-right"></div></div></td>
     <td></td>
   </tr>
   <tr>
@@ -446,9 +298,9 @@
     <td data-gauge="valve-gear-text"></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-3" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-3" data-control="door" value="open"><span>open</span></label></td>
   </tr>
   <tr>
     <td><label>whistle</label></td>
@@ -463,26 +315,26 @@
 </table>
 
 <!-- 7. Ash Management -->
-<h2>Ash Management</h2>
+<h2 id="s-ash">Ash Management</h2>
 <table>
   <tr>
     <td>ash level</td>
-    <td><progress data-gauge="firebox-ash" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-ash" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-ash-text"></td>
   </tr>
   <tr>
     <td>heat output</td>
-    <td><progress data-gauge="firebox-heat" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-heat" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-heat-text"></td>
   </tr>
   <tr class="compact">
     <td>fire</td>
-    <td><span data-gauge="fire-indicator" class="indicator off"></span></td>
     <td></td>
+    <td data-gauge="fire-indicator" class="indicator fire off"></td>
   </tr>
   <tr>
     <td>wood level</td>
-    <td><progress data-gauge="firebox-coal" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-coal" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-coal-text"></td>
   </tr>
   <tr class="centered">
@@ -491,38 +343,38 @@
     <td></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-4" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-4" data-control="door" value="open"><span>open</span></label></td>
   </tr>
 </table>
 
 <!-- 8. Water Management -->
-<h2>Water Management</h2>
+<h2 id="s-water">Water Management</h2>
 <table>
   <tr>
     <td>boiler water level</td>
-    <td><progress data-gauge="boiler-water" value="80" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-water" value="80" max="100"></progress></span></td>
     <td data-gauge="boiler-water-text"></td>
   </tr>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td>tender water</td>
-    <td><progress data-gauge="tender-water" value="100" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="tender-water" value="100" max="100"></progress></span></td>
     <td data-gauge="tender-water-text"></td>
   </tr>
   <tr>
     <td>steam flow</td>
-    <td><progress data-gauge="inj-steam-flow" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="inj-steam-flow" value="0" max="100"></progress></span></td>
     <td data-gauge="inj-steam-text"></td>
   </tr>
   <tr>
     <td>water delivery</td>
-    <td><progress data-gauge="inj-water-flow" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="inj-water-flow" value="0" max="100"></progress></span></td>
     <td data-gauge="inj-water-text"></td>
   </tr>
   <tr class="compact">
@@ -538,22 +390,17 @@
 </table>
 
 <!-- 9. Fire Management -->
-<h2>Fire Management</h2>
+<h2 id="s-fire">Fire Management</h2>
 <table>
   <tr>
     <td>wood level</td>
-    <td><progress data-gauge="firebox-coal" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-coal" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-coal-text"></td>
   </tr>
   <tr class="compact">
-    <td>shoveling</td>
-    <td><span data-gauge="shoveling-indicator" class="indicator off"></span></td>
-    <td></td>
-  </tr>
-  <tr class="compact">
     <td>fire</td>
-    <td><span data-gauge="fire-indicator" class="indicator off"></span></td>
     <td></td>
+    <td data-gauge="fire-indicator" class="indicator fire off"></td>
   </tr>
   <tr class="compact">
     <td>burn rate</td>
@@ -562,17 +409,17 @@
   </tr>
   <tr>
     <td>heat output</td>
-    <td><progress data-gauge="firebox-heat" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-heat" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-heat-text"></td>
   </tr>
   <tr>
     <td>tender wood</td>
-    <td><progress data-gauge="tender-coal" value="100" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="tender-coal" value="100" max="100"></progress></span></td>
     <td data-gauge="tender-coal-text"></td>
   </tr>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
@@ -598,11 +445,11 @@
 </table>
 
 <!-- 10. Stopping -->
-<h2>Stopping</h2>
+<h2 id="s-stopping">Stopping</h2>
 <table>
   <tr>
     <td>speed</td>
-    <td><progress data-gauge="speed-bar" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="speed-bar" value="0" max="100"></progress></span></td>
     <td data-gauge="speed-text"></td>
   </tr>
   <tr class="compact">
@@ -622,22 +469,22 @@
   </tr>
   <tr class="compact">
     <td>wheel slip</td>
-    <td><span data-gauge="slip-indicator" class="indicator off"></span></td>
-    <td data-gauge="slip-text"></td>
+    <td></td>
+    <td data-gauge="slip-text" class="slip-off">SLIPPING</td>
   </tr>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td>left cylinder</td>
-    <td><input type="range" data-gauge="piston-left" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-left"></div></div></td>
     <td></td>
   </tr>
   <tr>
     <td>right cylinder</td>
-    <td><input type="range" data-gauge="piston-right" min="0" max="100" value="50" disabled></td>
+    <td><div class="cylinder"><div class="piston" data-gauge="piston-right"></div></div></td>
     <td></td>
   </tr>
   <tr>
@@ -656,9 +503,9 @@
     <td data-gauge="brake-text"></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-5" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-5" data-control="door" value="open"><span>open</span></label></td>
   </tr>
   <tr>
     <td><label>whistle</label></td>
@@ -673,26 +520,26 @@
 </table>
 
 <!-- 12. Cool Down -->
-<h2>Cool Down</h2>
+<h2 id="s-cooldown">Cool Down</h2>
 <table>
   <tr>
     <td>boiler water level</td>
-    <td><progress data-gauge="boiler-water" value="80" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-water" value="80" max="100"></progress></span></td>
     <td data-gauge="boiler-water-text"></td>
   </tr>
   <tr>
     <td>boiler pressure</td>
-    <td><progress data-gauge="boiler-pressure" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-pressure" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-pressure-text"></td>
   </tr>
   <tr>
     <td data-gauge="boiler-temp-label">water temperature</td>
-    <td><progress data-gauge="boiler-temp" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="boiler-temp" value="0" max="100"></progress></span></td>
     <td data-gauge="boiler-temp-text"></td>
   </tr>
   <tr>
     <td>manifold temperature</td>
-    <td><progress data-gauge="manifold-temp" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="manifold-temp" value="0" max="100"></progress></span></td>
     <td data-gauge="manifold-temp-text"></td>
   </tr>
   <tr class="compact">
@@ -702,23 +549,23 @@
   </tr>
   <tr>
     <td>cumulative fatigue</td>
-    <td><progress data-gauge="manifold-stress" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="manifold-stress" value="0" max="100"></progress></span></td>
     <td data-gauge="manifold-stress-text"></td>
   </tr>
   <tr class="compact">
     <td>fire</td>
-    <td><span data-gauge="fire-indicator" class="indicator off"></span></td>
     <td></td>
+    <td data-gauge="fire-indicator" class="indicator fire off"></td>
   </tr>
   <tr>
     <td>ash level</td>
-    <td><progress data-gauge="firebox-ash" value="0" max="100"></progress></td>
+    <td><span class="gauge-bar"><progress data-gauge="firebox-ash" value="0" max="100"></progress></span></td>
     <td data-gauge="firebox-ash-text"></td>
   </tr>
   <tr class="compact">
-    <td><label>door open</label></td>
-    <td><input type="checkbox" data-control="door"></td>
+    <td>firebox door</td>
     <td></td>
+    <td class="gauge-radios door-gauge"><label><span class="door-actual" data-door-actual="closed">&#9660;</span><input type="radio" name="door-6" data-control="door" value="closed" checked><span>closed</span></label><label><span class="door-actual" data-door-actual="open">&#9660;</span><input type="radio" name="door-6" data-control="door" value="open"><span>open</span></label></td>
   </tr>
   <tr>
     <td><label>damper</label></td>
@@ -740,29 +587,44 @@
 <div id="status"></div>
 
 <div id="bottom-bar">
-  <button id="btn-pause">pause</button>
-  <button id="btn-mute">mute</button>
-  <span class="bar-sep"></span>
-  <span class="bar-fixed" data-gauge="speed-text"></span>
-  <span class="bar-sep"></span>
-  <span class="bar-fixed" data-gauge="distance-text"></span>
-  <span class="bar-sep"></span>
-  <span class="bar-fixed" data-gauge="elapsed-text"></span>
-  <span class="bar-sep"></span>
-  <span id="sim-speed-box">
-    <span class="bar-label">sim</span>
-    <progress data-gauge="sim-speed-bar" value="0" max="100"></progress>
-    <span data-gauge="sim-speed-text">1&times;</span>
-  </span>
-  <span class="bar-sep"></span>
-  <span class="sim-speed-radios">
-    <label><input type="radio" name="sim-speed" value="auto" checked> auto</label>
-    <label><input type="radio" name="sim-speed" value="1"> 1&times;</label>
-    <label><input type="radio" name="sim-speed" value="5"> 5&times;</label>
-    <label><input type="radio" name="sim-speed" value="10"> 10&times;</label>
-    <label><input type="radio" name="sim-speed" value="50"> 50&times;</label>
-    <label><input type="radio" name="sim-speed" value="100"> 100&times;</label>
-  </span>
+  <div id="bar-controls">
+    <button id="btn-pause">pause</button>
+    <button id="btn-mute">mute</button>
+    <span class="bar-sep"></span>
+    <span class="bar-fixed" data-gauge="speed-text"></span>
+    <span class="bar-sep"></span>
+    <span class="bar-fixed" data-gauge="distance-text"></span>
+    <span class="bar-sep"></span>
+    <span class="bar-fixed" data-gauge="elapsed-text"></span>
+    <span class="bar-sep"></span>
+    <span id="sim-speed-box">
+      <span class="bar-label">sim</span>
+      <span class="gauge-bar bar-gauge-bar"><progress data-gauge="sim-speed-bar" value="0" max="100"></progress></span>
+      <span data-gauge="sim-speed-text">1&times;</span>
+    </span>
+    <span class="bar-sep"></span>
+    <span class="sim-speed-radios">
+      <label><input type="radio" name="sim-speed" value="auto" checked> auto</label>
+      <label><input type="radio" name="sim-speed" value="1"> 1&times;</label>
+      <label><input type="radio" name="sim-speed" value="5"> 5&times;</label>
+      <label><input type="radio" name="sim-speed" value="10"> 10&times;</label>
+      <label><input type="radio" name="sim-speed" value="50"> 50&times;</label>
+      <label><input type="radio" name="sim-speed" value="100"> 100&times;</label>
+    </span>
+  </div>
+  <div id="station-tabs">
+    <a href="#s-train">Train</a>
+    <a href="#s-ignition">Ignition</a>
+    <a href="#s-raising">Raising</a>
+    <a href="#s-clearance">Clearance</a>
+    <a href="#s-throttle">Throttle</a>
+    <a href="#s-cruise">Cruise</a>
+    <a href="#s-ash">Ash</a>
+    <a href="#s-water">Water</a>
+    <a href="#s-fire">Fire</a>
+    <a href="#s-stopping">Stopping</a>
+    <a href="#s-cooldown">Cool Down</a>
+  </div>
 </div>
 
 <script type="module">

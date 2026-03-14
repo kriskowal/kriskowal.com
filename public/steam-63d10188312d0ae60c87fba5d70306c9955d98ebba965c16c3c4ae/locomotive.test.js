@@ -543,16 +543,19 @@ describe("Damper and blower", () => {
   });
 
   it("blower increases burn rate when stationary", () => {
-    const locoNoBlower = new Locomotive({ fireboxInitialCoal: 50 });
+    // Pre-warm both locomotives so the boiler has pressure for the blower jet
+    const locoNoBlower = new Locomotive({ fireboxInitialCoal: 50, boilerTemp: 473.15 });
     locoNoBlower.ignite();
     locoNoBlower.manualDoorOpen = true;
+    for (let i = 0; i < 200; i++) locoNoBlower.step(0.1);
     locoNoBlower.blower = 0;
     locoNoBlower.step(0.01);
     const rateNoBlower = locoNoBlower.burnRate;
 
-    const locoBlower = new Locomotive({ fireboxInitialCoal: 50 });
+    const locoBlower = new Locomotive({ fireboxInitialCoal: 50, boilerTemp: 473.15 });
     locoBlower.ignite();
     locoBlower.manualDoorOpen = true;
+    for (let i = 0; i < 200; i++) locoBlower.step(0.1);
     locoBlower.blower = 1;
     locoBlower.step(0.01);
     const rateBlower = locoBlower.burnRate;

@@ -3,10 +3,13 @@
 
 import { Simulation } from "./simulation.js";
 import { pistonDisplacement } from "./geometry.js";
+import { rawPressure } from "./steam.js";
 import { WhistleSynth } from "./whistle.js";
 import { ChuffSynth } from "./chuff.js";
 import { BellSynth } from "./bell.js";
 import { AmbientSynth } from "./ambient.js";
+
+const FIRE_FLICKER = true;
 
 // Unit conversions
 // Each returns { v: number, u: string } for use with fmt().
@@ -73,16 +76,28 @@ export function main() {
   const loco = sim.loco;
   const cfg = sim.cfg;
 
-  // DOM helpers for data-gauge / data-control multi-element queries
+  // DOM helpers — all element lookups are cached at startup since the DOM is static.
   const $ = (id) => document.getElementById(id);
 
-  function gaugeAll(name) {
-    return document.querySelectorAll(`[data-gauge="${name}"]`);
+  const gaugeCache = new Map();
+  for (const el of document.querySelectorAll("[data-gauge]")) {
+    const name = el.dataset.gauge;
+    let arr = gaugeCache.get(name);
+    if (!arr) { arr = []; gaugeCache.set(name, arr); }
+    arr.push(el);
   }
 
-  function controlAll(name) {
-    return document.querySelectorAll(`[data-control="${name}"]`);
+  const controlCache = new Map();
+  for (const el of document.querySelectorAll("[data-control]")) {
+    const name = el.dataset.control;
+    let arr = controlCache.get(name);
+    if (!arr) { arr = []; controlCache.set(name, arr); }
+    arr.push(el);
   }
+
+  const EMPTY = [];
+  function gaugeAll(name) { return gaugeCache.get(name) || EMPTY; }
+  function controlAll(name) { return controlCache.get(name) || EMPTY; }
 
   function setGauge(name, fn) {
     for (const el of gaugeAll(name)) fn(el);
@@ -100,7 +115,6 @@ export function main() {
     for (const el of gaugeAll(name)) el.className = cls;
   }
 
-  // Sync all instances of a shared control to match a canonical value
   function syncControl(name, prop, value) {
     for (const el of controlAll(name)) {
       if (el[prop] !== value) el[prop] = value;
@@ -171,15 +185,7 @@ export function main() {
     }
   }
 
-  function wireCheckbox(name, onChange) {
-    for (const el of controlAll(name)) {
-      el.addEventListener("change", () => {
-        onChange(el);
-        syncControl(name, "checked", el.checked);
-        ensureRunning();
-      });
-    }
-  }
+
 
   wireRange("throttle", (el) => { loco.throttle = el.valueAsNumber / 100; });
   wireRange("valve-gear", (el) => { loco.johnsonBar = el.valueAsNumber / 100; });
@@ -200,16 +206,32 @@ export function main() {
     }
   });
 
-  wireCheckbox("door", () => {});
-
-  // Cars
-  for (const el of controlAll("cars")) {
-    el.addEventListener("input", () => {
-      loco.numCars = Math.max(0, Math.min(14, el.valueAsNumber || 0));
-      syncControl("cars", "value", loco.numCars);
+  for (const el of controlAll("door")) {
+    el.addEventListener("change", () => {
+      const isOpen = el.value === "open";
+      loco.manualDoorOpen = isOpen;
+      for (const other of controlAll("door")) {
+        if (other.value === el.value && other !== el) other.checked = true;
+      }
       ensureRunning();
     });
   }
+
+  // Cars
+  const carsDisplay = $("cars-display");
+  function updateCarsDisplay() {
+    if (carsDisplay) carsDisplay.textContent = loco.numCars;
+  }
+  $("btn-cars-dec").addEventListener("click", () => {
+    loco.numCars = Math.max(0, loco.numCars - 1);
+    updateCarsDisplay();
+    ensureRunning();
+  });
+  $("btn-cars-inc").addEventListener("click", () => {
+    loco.numCars = Math.min(14, loco.numCars + 1);
+    updateCarsDisplay();
+    ensureRunning();
+  });
 
   // Buttons
   $("btn-fuel").addEventListener("click", () => {
@@ -293,13 +315,66 @@ export function main() {
     }
   });
 
-  // Render loop
+  // Render loop — cached element refs and pre-allocated state objects
+  // so the per-frame path does zero DOM queries and zero allocations.
   const GAUGE_INTERVAL = 500;
   let lastGauge = 0;
+  let firePhase, fireSpeed, fireHue, fireLit, fireGlow;
+
+  const speedBox = $("sim-speed-box");
+  const statusEl = $("status");
+  const pauseBtn = $("btn-pause");
+  const fireEls = gaugeAll("fire-indicator");
+  const doorActualEls = Array.from(document.querySelectorAll("[data-door-actual]"));
+  const reliefEls = Array.from(document.querySelectorAll("[data-relief]"));
+
+  const cachedCoalMin = controlAll("coal-min")[0];
+  const cachedCoalMax = controlAll("coal-max")[0];
+  const pistonEls = [gaugeAll("piston-left"), gaugeAll("piston-right")];
+
+  const maxGaugePressure = cfg.maxBoilerPressure - cfg.pAtm;
+  const chuffState = {
+    elapsed: 0,
+    animAngle: 0,
+    crankOffset: cfg.crankOffset,
+    numCylinders: cfg.numCylinders,
+    cutoff: 0,
+    steamLap: cfg.steamLap,
+    exhaustLap: cfg.exhaustLap,
+    valveLead: cfg.valveLead,
+    maxPortOpening: cfg.maxPortOpening,
+    chestPressureGauge: 0,
+    maxPressure: maxGaugePressure,
+    direction: 0,
+  };
+
+  const ambientState = {
+    brake: 0,
+    speed: 0,
+    fireboxHeat: 0,
+    maxFireboxHeat: cfg.maxBurnRate * cfg.coalEnergy,
+    doorOpen: false,
+    shoveling: false,
+    simSpeed: 1,
+    blowdown: 0,
+    boilerPressure: 0,
+    maxPressure: cfg.maxBoilerPressure,
+    pAtm: cfg.pAtm,
+    waterFraction: 0,
+    sandDropping: false,
+    reliefValveOpen: false,
+    blower: 0,
+    steamRate: 0,
+    injectorActive: false,
+  };
 
   function update(timestamp) {
     if (!running) return;
+    innerUpdate(timestamp);
     requestAnimationFrame(update);
+  }
+
+  function innerUpdate(timestamp) {
 
     if (lastTime === null) {
       lastTime = timestamp;
@@ -310,13 +385,8 @@ export function main() {
     const elapsed = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
-    // Sync controls into simulation (read from first instance of each)
-    const firstCoalMin = controlAll("coal-min")[0];
-    const firstCoalMax = controlAll("coal-max")[0];
-    const firstDoor = controlAll("door")[0];
-    if (firstCoalMin) loco.coalMin = firstCoalMin.valueAsNumber / 100;
-    if (firstCoalMax) loco.coalMax = firstCoalMax.valueAsNumber / 100;
-    if (firstDoor) loco.manualDoorOpen = firstDoor.checked;
+    if (cachedCoalMin) loco.coalMin = cachedCoalMin.valueAsNumber / 100;
+    if (cachedCoalMax) loco.coalMax = cachedCoalMax.valueAsNumber / 100;
 
     // Advance simulation
     sim.simSpeedOverride = simSpeedOverride;
@@ -325,8 +395,6 @@ export function main() {
     setGaugeValue("sim-speed-bar", Math.min(100, sim.simSpeed));
     setGaugeText("sim-speed-text", `${sim.simSpeed}\u00d7`);
 
-    // Highlight sim speed box when changing, fade when steady
-    const speedBox = $("sim-speed-box");
     if (speedBox) {
       if (sim.simSpeed !== prevSpeed) {
         speedBox.className = "speed-changing";
@@ -335,69 +403,81 @@ export function main() {
       }
     }
 
-    // Boiler explosion
     if (loco.exploded) {
       running = false;
-      $("status").textContent = "BOILER EXPLOSION \u2014 simulation ended";
-      $("status").style.color = "#f33";
-      $("btn-pause").textContent = "\uD83D\uDCA5";
-      $("btn-pause").disabled = true;
+      statusEl.textContent = "BOILER EXPLOSION \u2014 simulation ended";
+      statusEl.style.color = "#f33";
+      pauseBtn.textContent = "\uD83D\uDCA5";
+      pauseBtn.disabled = true;
       return;
     }
 
-    // Pistons (every frame)
     for (let cyl = 0; cyl < cfg.numCylinders; cyl++) {
       const theta = sim.animAngle + cyl * cfg.crankOffset;
       const pos = pistonDisplacement(theta, cfg.stroke / 2, cfg.rodLen);
-      const pct = (pos / cfg.stroke) * 100;
-      setGaugeValue(cyl === 0 ? "piston-left" : "piston-right", pct);
+      const pct = pos / cfg.stroke;
+      for (const el of pistonEls[cyl]) el.style.setProperty("--pct", pct);
     }
 
-    // Cylinder exhaust sound (every frame)
     const jbPos = loco.johnsonBar;
-    const chuffSnap = loco.snapshot();
-    const chestGauge = Math.max(0, chuffSnap.chestPressure - cfg.pAtm);
-    const maxGauge = cfg.maxBoilerPressure - cfg.pAtm;
-    chuff.update({
-      elapsed,
-      animAngle: sim.animAngle,
-      crankOffset: cfg.crankOffset,
-      numCylinders: cfg.numCylinders,
-      cutoff: Math.abs(jbPos) * cfg.maxCutoff,
-      steamLap: cfg.steamLap,
-      exhaustLap: cfg.exhaustLap,
-      valveLead: cfg.valveLead,
-      maxPortOpening: cfg.maxPortOpening,
-      chestPressureGauge: chestGauge,
-      maxPressure: maxGauge,
-      direction: Math.sign(jbPos),
-    });
+    const chestRho = loco.chestMass / cfg.steamChestVolume;
+    const chestP = loco.chestMass > 1e-6
+      ? rawPressure(loco.chestTemp, chestRho) : cfg.pAtm;
+    chuffState.elapsed = elapsed;
+    chuffState.animAngle = sim.animAngle;
+    chuffState.cutoff = Math.abs(jbPos) * cfg.maxCutoff;
+    chuffState.chestPressureGauge = Math.max(0, chestP - cfg.pAtm);
+    chuffState.direction = Math.sign(jbPos);
+    chuff.update(chuffState);
 
     // Bell physics (every frame)
     bell.update(elapsed);
     const bellDeg = (((bell.angle * (180 / Math.PI)) % 360) + 540) % 360 - 180;
     setGaugeValue("bell-swing", Math.round(bellDeg));
 
-    // Ambient sounds (every frame)
-    ambient.update({
-      brake: loco.brake,
-      speed: loco.velocity,
-      fireboxHeat: loco.fireboxHeat,
-      maxFireboxHeat: cfg.maxBurnRate * cfg.coalEnergy,
-      doorOpen: loco.fireboxDoorOpen,
-      shoveling: loco.shoveling,
-      simSpeed: sim.simSpeed,
-      blowdown: loco.blowdown,
-      boilerPressure: loco.boilerPressure,
-      maxPressure: cfg.maxBoilerPressure,
-      pAtm: cfg.pAtm,
-      waterFraction: loco.boilerWaterMass / cfg.boilerWaterMass,
-      sandDropping: loco.sandDropping,
-      reliefValveOpen: loco.reliefValveOpen,
-      blower: loco.blower,
-      steamRate: loco.steamRate,
-      injectorActive: loco.injectorActive,
-    });
+    ambientState.brake = loco.brake;
+    ambientState.speed = loco.velocity;
+    ambientState.fireboxHeat = loco.fireboxHeat;
+    ambientState.doorOpen = loco.fireboxDoorOpen;
+    ambientState.shoveling = loco.shoveling;
+    ambientState.simSpeed = sim.simSpeed;
+    ambientState.blowdown = loco.blowdown;
+    ambientState.boilerPressure = loco.boilerPressure;
+    ambientState.waterFraction = loco.boilerWaterMass / cfg.boilerWaterMass;
+    ambientState.sandDropping = loco.sandDropping;
+    ambientState.reliefValveOpen = loco.reliefValveOpen;
+    ambientState.blower = loco.blower;
+    ambientState.steamRate = loco.steamRate;
+    ambientState.injectorActive = loco.injectorActive;
+    ambient.update(ambientState);
+
+    if (loco.ignited) {
+      if (FIRE_FLICKER) {
+        if (firePhase === undefined) {
+          firePhase = 0; fireSpeed = 0.02; fireHue = 25; fireLit = 45; fireGlow = 6;
+        }
+        firePhase += fireSpeed;
+        if (firePhase >= 1) { firePhase = 0; fireSpeed = 0.008 + Math.random() * 0.025; }
+        const wave = Math.sin(firePhase * Math.PI);
+        const tHue = 10 + wave * 20;
+        const tLit = 35 + wave * 25;
+        const tGlow = 3 + wave * 7;
+        fireHue += (tHue - fireHue) * 0.08;
+        fireLit += (tLit - fireLit) * 0.08;
+        fireGlow += (tGlow - fireGlow) * 0.08;
+        fireHue += (Math.random() - 0.5) * 1.5;
+        fireLit += (Math.random() - 0.5) * 1.0;
+        const bg = `hsl(${fireHue}, 92%, ${fireLit}%)`;
+        const ga = 0.4 + (fireLit - 35) / 50;
+        const shadow = `inset 0 1px 4px rgba(0,0,0,0.3), 0 0 ${fireGlow.toFixed(1)}px rgba(255,${80 + (fireLit - 35) * 2 | 0},0,${ga.toFixed(2)})`;
+        for (const el of fireEls) { el.style.background = bg; el.style.boxShadow = shadow; }
+      }
+    } else {
+      firePhase = undefined;
+      if (FIRE_FLICKER) {
+        for (const el of fireEls) { el.style.background = ""; el.style.boxShadow = ""; }
+      }
+    }
 
     // Gauges (at slower interval)
     if (timestamp - lastGauge < GAUGE_INTERVAL) return;
@@ -412,8 +492,7 @@ export function main() {
     // Firebox
     setGaugeValue("firebox-coal", (loco.fireboxCoal / cfg.fireboxMaxCoal) * 100);
     setGaugeText("firebox-coal-text", fmt(mS(loco.fireboxCoal), 0));
-    setGaugeClass("shoveling-indicator", "indicator " + (loco.shoveling ? "on" : "off"));
-    setGaugeClass("fire-indicator", "indicator " + (loco.ignited ? "on" : "off"));
+    setGaugeClass("fire-indicator", "indicator fire " + (loco.ignited ? "on" : "off"));
     setGaugeText("burn-rate-text", loco.ignited ? fmt(mR(loco.burnRate), 2) : "");
     setGaugeValue("firebox-ash", (loco.fireboxAsh / cfg.ashMaxKg) * 100);
     setGaugeText("firebox-ash-text", ` ${((loco.fireboxAsh / cfg.ashMaxKg) * 100).toFixed(0)}%`);
@@ -456,7 +535,7 @@ export function main() {
 
     if (loco.boilerWaterMass > 0) {
       const bTemp = t(loco.boilerTemp);
-      setGaugeValue("boiler-temp", ((loco.boilerTemp - 373.15) / 274) * 100);
+      setGaugeValue("boiler-temp", ((loco.boilerTemp - 273.15) / 374) * 100);
       setGaugeText("boiler-temp-text", fmt(bTemp, 0));
       setGaugeText("boiler-temp-label", "water temperature");
     } else {
@@ -477,7 +556,10 @@ export function main() {
     whistle.pressureFraction = pMax > 0 ? pGauge / pMax : 0;
     if (whistleTouching) whistleUpdate();
 
-    setGaugeClass("relief-indicator", "indicator " + (loco.reliefValveOpen ? "relief" : "off"));
+    const reliefState = loco.reliefValveOpen ? "open" : "closed";
+    for (const el of reliefEls) {
+      el.classList.toggle("active", el.dataset.relief === reliefState);
+    }
 
     // Manifold
     const mTemp = t(loco.manifoldTemp);
@@ -536,17 +618,14 @@ export function main() {
     setGaugeText("blower-text", ` ${(loco.blower * 100).toFixed(0)}%`);
     syncControl("blower", "value", Math.round(loco.blower * 100));
 
-    const firstMin = controlAll("coal-min")[0];
-    const firstMax = controlAll("coal-max")[0];
-    if (firstMin) syncControl("coal-min", "value", firstMin.value);
-    if (firstMax) syncControl("coal-max", "value", firstMax.value);
-    setGaugeText("coal-min-text", firstMin ? ` ${firstMin.value}%` : "");
-    setGaugeText("coal-max-text", firstMax ? ` ${firstMax.value}%` : "");
+    if (cachedCoalMin) syncControl("coal-min", "value", cachedCoalMin.value);
+    if (cachedCoalMax) syncControl("coal-max", "value", cachedCoalMax.value);
+    setGaugeText("coal-min-text", cachedCoalMin ? ` ${cachedCoalMin.value}%` : "");
+    setGaugeText("coal-max-text", cachedCoalMax ? ` ${cachedCoalMax.value}%` : "");
 
     const trainMass = cfg.locomotiveMass + loco.numCars * cfg.carMass
       + loco.boilerWaterMass + loco.tenderCoal + loco.tenderWater;
     setGaugeText("train-mass", fmt(mL(trainMass), 1));
-    for (const el of controlAll("cars")) el.disabled = loco.distance > 100;
 
     // Motion
     const spdVal = spd(loco.velocity);
@@ -556,8 +635,9 @@ export function main() {
     setGaugeText("distance-text", fmt(distVal, distVal.u === "m" || distVal.u === "ft" ? 0 : 2));
     setGaugeText("te-text", fmt(f(loco.totalTE), 1));
     setGaugeText("applied-te-text", fmt(f(loco.appliedTE), 1));
-    setGaugeClass("slip-indicator", "indicator " + (loco.wheelSlip ? "relief" : "off"));
-    setGaugeText("slip-text", loco.wheelSlip ? "SLIPPING" : "");
+    for (const el of gaugeAll("slip-text")) {
+      el.className = loco.wheelSlip ? "slip-on" : "slip-off";
+    }
     setGaugeText("sand-text", loco.sandDropping ? "active" : "");
 
     // Clock
@@ -567,13 +647,41 @@ export function main() {
     const mins = totalMin % 60;
     setGaugeText("elapsed-text", `${days}d ${hours}h ${mins}m`);
 
-    // Sync door checkbox from simulation (auto-open during shoveling)
-    syncControl("door", "checked", loco.fireboxDoorOpen);
+    const doorSel = loco.manualDoorOpen ? "open" : "closed";
+    for (const el of controlAll("door")) {
+      if (el.value === doorSel) el.checked = true;
+    }
+    const doorActual = loco.fireboxDoorOpen ? "open" : "closed";
+    for (const el of doorActualEls) {
+      el.classList.toggle("active", el.dataset.doorActual === doorActual);
+    }
   }
 
-  // Start the simulation loop without audio (no user gesture yet)
+  // Station tab scroll tracking
+  const stationIds = [
+    "s-train", "s-ignition", "s-raising", "s-clearance", "s-throttle",
+    "s-cruise", "s-ash", "s-water", "s-fire", "s-stopping", "s-cooldown",
+  ];
+  const tabLinks = document.querySelectorAll("#station-tabs a");
+  const observer = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        for (const a of tabLinks) {
+          a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id);
+        }
+        const active = document.querySelector("#station-tabs a.active");
+        if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+    }
+  }, { rootMargin: "-10% 0px -80% 0px" });
+
+  for (const id of stationIds) {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  }
+
   running = true;
   lastTime = performance.now();
-  $("btn-pause").textContent = "pause";
+  pauseBtn.textContent = "pause";
   requestAnimationFrame(update);
 }

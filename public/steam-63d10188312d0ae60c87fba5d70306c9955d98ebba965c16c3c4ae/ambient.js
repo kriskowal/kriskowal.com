@@ -107,6 +107,31 @@ const INJECTOR_BANDS = [
 const INJECTOR_MASTER = 0.07;
 const INJECTOR_SMOOTHING = 0.05;
 
+// Rail joints
+// Period-appropriate 30-foot iron rails produce a rhythmic click-clack
+// as each axle crosses the gap between rail ends. Joints on opposite
+// rails are staggered by half a rail length, giving the characteristic
+// double beat. Driving wheels are heavier and produce louder impacts.
+
+const RAIL_LENGTH = 9.144;  // 30 feet in meters
+const RAIL_STAGGER = RAIL_LENGTH / 4;
+const AXLE_OFFSETS = [0, 3]; // two wheel sets
+const AXLE_WEIGHTS = [1.0, 0.7];
+const RAIL_IMPACT_BANDS = [
+  { freq: 250, Q: 0.5, gain: 0.30 },
+  { freq: 400, Q: 0.5, gain: 0.40 },
+  { freq: 600, Q: 0.7, gain: 0.30 },
+];
+const RAIL_BODY_TONES = [
+  { freq: 200, gain: 0.40 },
+  { freq: 400, gain: 0.45 },
+  { freq: 550, gain: 0.15 },
+];
+const RAIL_MASTER = 0.25;
+const RAIL_DECAY_IMPACT = 0.003; // seconds — sharp broadband clack
+const RAIL_DECAY_BODY = 0.008;   // seconds — very short resonant ring
+const RAIL_MIN_SPEED = 0.5; // m/s — below this, silent
+
 // Sand
 // Brief smooth burst of high-frequency noise — sand pouring from
 // the sandbox through a pipe onto the rail. One-shot envelope
@@ -133,6 +158,7 @@ export class AmbientSynth {
     this._blow = null;
     this._blowerHiss = null;
     this._injectorHiss = null;
+    this._railJoints = null;
     this._sand = null;
     this._wasSandDropping = false;
     this._wasDoorOpen = false;
@@ -177,6 +203,7 @@ export class AmbientSynth {
     this._blow = this._buildBlow(ctx, noise, dryGain, convolver);
     this._blowerHiss = this._buildBlower(ctx, noise, dryGain, convolver);
     this._injectorHiss = this._buildInjector(ctx, noise, dryGain, convolver);
+    this._railJoints = this._buildRailJoints(ctx, noise, dryGain, convolver);
     this._sand = this._buildSand(ctx, noise, dryGain, convolver);
 
     this._loadSample(FIRE_LOOP_URL, FIRE_CROSSFADE).then(buf => {
@@ -417,6 +444,54 @@ export class AmbientSynth {
     return { master };
   }
 
+  // Rail joint sub-graph
+
+  _buildRailJoints(ctx, noise, dry, reverb) {
+    const voices = AXLE_OFFSETS.map((offset, i) => {
+      // Impact channel: short broadband noise burst for the percussive clack
+      const impactGain = ctx.createGain();
+      impactGain.gain.value = 0;
+      impactGain.connect(dry);
+      impactGain.connect(reverb);
+
+      RAIL_IMPACT_BANDS.forEach(({ freq, Q, gain: level }) => {
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = freq;
+        bp.Q.value = Q;
+        const g = ctx.createGain();
+        g.gain.value = level;
+        noise.connect(bp);
+        bp.connect(g);
+        g.connect(impactGain);
+      });
+
+      // Body channel: oscillators for brief tonal resonance
+      const bodyGain = ctx.createGain();
+      bodyGain.gain.value = 0;
+      bodyGain.connect(dry);
+      bodyGain.connect(reverb);
+
+      RAIL_BODY_TONES.forEach(({ freq, gain: level }) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const g = ctx.createGain();
+        g.gain.value = level;
+        osc.connect(g);
+        g.connect(bodyGain);
+        osc.start();
+      });
+
+      return {
+        impactGain, bodyGain,
+        offset, weight: AXLE_WEIGHTS[i], leftPhase: 0, rightPhase: 0,
+      };
+    });
+
+    return { voices, distance: 0 };
+  }
+
   // Sand sub-graph
 
   _buildSand(ctx, noise, dry, reverb) {
@@ -509,79 +584,80 @@ export class AmbientSynth {
    * @param {number} p.blower         - Blower valve opening 0–1
    * @param {number} p.steamRate      - Boiler-to-super steam flow [kg/s]
    * @param {boolean} p.injectorActive - Injector is caught and delivering
+   * @param {number} p.elapsed        - Real-time seconds since last frame
    */
   update(p) {
-    if (!this._ctx) return;
-    this._buildGraph();
+    if (!this._ctx) { /* audio context not initialized */ }
+    else {
+      this._buildGraph();
+      const now = this._ctx.currentTime;
 
-    const now = this._ctx.currentTime;
-
-    this._updateBrake(now, p);
-    this._updateFire(now, p);
-    this._updateShovel(now, p);
-    this._updateDoor(now, p);
-    this._updateBlow(now, p);
-    this._updateBlower(now, p);
-    this._updateInjector(now, p);
-    this._updateSand(now, p);
+      this._updateBrake(now, p);
+      this._updateFire(now, p);
+      this._updateShovel(now, p);
+      this._updateDoor(now, p);
+      this._updateBlow(now, p);
+      this._updateBlower(now, p);
+      this._updateInjector(now, p);
+      this._updateRailJoints(now, p);
+      this._updateSand(now, p);
+    }
   }
 
   // Per-system updates
 
   _updateBrake(now, { brake, speed }) {
     const b = this._brake;
-
-    // No sound if not braking or stationary
     const speedAbs = Math.abs(speed);
-    if (brake < 0.01 || speedAbs < 0.05) {
+    const active = brake >= 0.01 && speedAbs >= 0.05;
+
+    if (active) {
+      const speedFactor = Math.min(1, speedAbs / 15);
+      const vol = brake * speedFactor * BRAKE_MASTER;
+      b.master.gain.setTargetAtTime(vol, now, BRAKE_SMOOTHING);
+
+      const grindMix = Math.max(0, 1 - speedAbs / BRAKE_SPEED_CROSSOVER);
+      const screechMix = 1 - grindMix;
+      for (const { bandGain, baseGain } of b.highBands) {
+        bandGain.gain.setTargetAtTime(baseGain * screechMix, now, BRAKE_SMOOTHING);
+      }
+      b.grindGain.gain.setTargetAtTime(BRAKE_GRIND_GAIN * grindMix, now, BRAKE_SMOOTHING);
+    } else {
       b.master.gain.setTargetAtTime(0, now, BRAKE_SMOOTHING);
-      return;
     }
-
-    // Intensity: brake force × speed (louder when fast)
-    const speedFactor = Math.min(1, speedAbs / 15);
-    const vol = brake * speedFactor * BRAKE_MASTER;
-    b.master.gain.setTargetAtTime(vol, now, BRAKE_SMOOTHING);
-
-    // Crossfade between high screech and low grind at low speed
-    const grindMix = Math.max(0, 1 - speedAbs / BRAKE_SPEED_CROSSOVER);
-    const screechMix = 1 - grindMix;
-
-    for (const { bandGain, baseGain } of b.highBands) {
-      bandGain.gain.setTargetAtTime(baseGain * screechMix, now, BRAKE_SMOOTHING);
-    }
-    b.grindGain.gain.setTargetAtTime(BRAKE_GRIND_GAIN * grindMix, now, BRAKE_SMOOTHING);
   }
 
   _updateFire(now, { fireboxHeat, maxFireboxHeat, doorOpen, steamRate }) {
-    const f = this._fire;
-    if (!this._fireBuffer) return;
+    if (!this._fireBuffer) { /* sample not yet loaded */ }
+    else {
+      const f = this._fire;
+      const heat = Math.max(0, fireboxHeat || 0);
+      const maxHeat = maxFireboxHeat || 1;
+      const intensity = Math.min(1, heat / maxHeat);
+      const active = intensity >= 0.001;
 
-    const heat = Math.max(0, fireboxHeat || 0);
-    const maxHeat = maxFireboxHeat || 1;
-    const intensity = Math.min(1, heat / maxHeat);
-
-    if (intensity < 0.001) {
-      f.master.gain.setTargetAtTime(0, now, FIRE_SMOOTHING);
-      return;
+      if (active) {
+        const doorAtten = doorOpen ? 1.0 : FIRE_DOOR_CLOSED_ATTEN;
+        const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
+        const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
+        const vol = intensity * doorAtten * exhaustAtten * FIRE_MASTER;
+        f.master.gain.setTargetAtTime(vol, now, FIRE_SMOOTHING);
+      } else {
+        f.master.gain.setTargetAtTime(0, now, FIRE_SMOOTHING);
+      }
     }
-
-    const doorAtten = doorOpen ? 1.0 : FIRE_DOOR_CLOSED_ATTEN;
-    const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
-    const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
-    const vol = intensity * doorAtten * exhaustAtten * FIRE_MASTER;
-    f.master.gain.setTargetAtTime(vol, now, FIRE_SMOOTHING);
   }
 
   _updateShovel(now, { shoveling, doorOpen, steamRate }) {
-    const s = this._shovel;
-    if (!this._shovelBuffer) return;
-
-    const doorAtten = doorOpen ? 1.0 : 0.15;
-    const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
-    const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
-    const target = shoveling ? SHOVEL_MASTER * doorAtten * exhaustAtten : 0;
-    s.master.gain.setTargetAtTime(target, now, SHOVEL_SMOOTHING);
+    if (!this._shovelBuffer) { /* sample not yet loaded */ }
+    else {
+      const s = this._shovel;
+      const doorAtten = doorOpen ? 1.0 : 0.15;
+      const exhaustMask = Math.min(1, (steamRate || 0) / FIRE_EXHAUST_REF);
+      const exhaustAtten = 1 - exhaustMask * (1 - FIRE_EXHAUST_ATTEN);
+      const target = shoveling ? SHOVEL_MASTER * doorAtten * exhaustAtten : 0;
+      s.master.gain.setTargetAtTime(target, now, SHOVEL_SMOOTHING);
+    }
   }
 
   _updateDoor(now, { doorOpen, simSpeed }) {
@@ -594,50 +670,90 @@ export class AmbientSynth {
 
   _updateBlow(now, { blowdown, boilerPressure, pAtm, reliefValveOpen }) {
     const b = this._blow;
-
     let opening = blowdown;
     if (reliefValveOpen) {
       opening = Math.max(opening, 0.7);
     }
-
     const gaugeP = Math.max(0, boilerPressure - pAtm);
     const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
+    const active = opening >= 0.01 && pFrac >= 0.001;
 
-    if (opening < 0.01 || pFrac < 0.001) {
+    if (active) {
+      const vol = opening * pFrac * BLOW_MASTER;
+      b.master.gain.setTargetAtTime(vol, now, BLOW_SMOOTHING);
+    } else {
       b.master.gain.setTargetAtTime(0, now, BLOW_SMOOTHING);
-      return;
     }
-
-    const vol = opening * pFrac * BLOW_MASTER;
-    b.master.gain.setTargetAtTime(vol, now, BLOW_SMOOTHING);
   }
 
   _updateBlower(now, { blower, boilerPressure, pAtm }) {
     const b = this._blowerHiss;
+    const active = blower >= 0.01;
 
-    if (blower < 0.01) {
+    if (active) {
+      const gaugeP = Math.max(0, boilerPressure - pAtm);
+      const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
+      const vol = blower * pFrac * BLOWER_MASTER;
+      b.master.gain.setTargetAtTime(vol, now, BLOWER_SMOOTHING);
+    } else {
       b.master.gain.setTargetAtTime(0, now, BLOWER_SMOOTHING);
-      return;
     }
-
-    const gaugeP = Math.max(0, boilerPressure - pAtm);
-    const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
-    const vol = blower * pFrac * BLOWER_MASTER;
-    b.master.gain.setTargetAtTime(vol, now, BLOWER_SMOOTHING);
   }
 
   _updateInjector(now, { injectorActive, boilerPressure, pAtm }) {
     const inj = this._injectorHiss;
 
-    if (!injectorActive) {
+    if (injectorActive) {
+      const gaugeP = Math.max(0, boilerPressure - pAtm);
+      const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
+      const vol = pFrac * INJECTOR_MASTER;
+      inj.master.gain.setTargetAtTime(vol, now, INJECTOR_SMOOTHING);
+    } else {
       inj.master.gain.setTargetAtTime(0, now, INJECTOR_SMOOTHING);
-      return;
+    }
+  }
+
+  _updateRailJoints(now, { speed, simSpeed }) {
+    const rj = this._railJoints;
+    const absSpeed = Math.abs(speed);
+    const dt = now - (this._lastRailTime || now);
+    this._lastRailTime = now;
+
+    const validDt = dt > 0 && dt <= 0.1;
+    const audible = validDt && absSpeed >= RAIL_MIN_SPEED && (simSpeed || 1) <= 2;
+
+    if (validDt) {
+      rj.distance += absSpeed * dt;
     }
 
-    const gaugeP = Math.max(0, boilerPressure - pAtm);
-    const pFrac = Math.sqrt(Math.min(1, gaugeP / 800));
-    const vol = pFrac * INJECTOR_MASTER;
-    inj.master.gain.setTargetAtTime(vol, now, INJECTOR_SMOOTHING);
+    const amplitude = audible ? Math.min(1, Math.sqrt(absSpeed / 20)) * RAIL_MASTER : 0;
+
+    for (const v of rj.voices) {
+      const leftPhase = ((rj.distance + v.offset) % RAIL_LENGTH) / RAIL_LENGTH;
+      const rightPhase = ((rj.distance + v.offset + RAIL_STAGGER) % RAIL_LENGTH) / RAIL_LENGTH;
+
+      if (audible && leftPhase < v.leftPhase) {
+        this._triggerKnock(v, amplitude * v.weight, now);
+      }
+      if (audible && rightPhase < v.rightPhase) {
+        this._triggerKnock(v, amplitude * v.weight * 0.7, now);
+      }
+
+      v.leftPhase = leftPhase;
+      v.rightPhase = rightPhase;
+    }
+  }
+
+  _triggerKnock(voice, vol, now) {
+    const ig = voice.impactGain.gain;
+    ig.cancelScheduledValues(now);
+    ig.setValueAtTime(vol, now);
+    ig.setTargetAtTime(0, now + 0.001, RAIL_DECAY_IMPACT);
+
+    const bg = voice.bodyGain.gain;
+    bg.cancelScheduledValues(now);
+    bg.setValueAtTime(vol, now);
+    bg.setTargetAtTime(0, now + 0.002, RAIL_DECAY_BODY);
   }
 
   _updateSand(now, { sandDropping }) {

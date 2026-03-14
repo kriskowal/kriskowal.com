@@ -536,17 +536,19 @@ export class Locomotive {
       }
     }
 
-    // Draft — natural stack effect + blower supplement, or exhaust blast
-    // Natural draft and blower are additive (blower supplements stack effect).
-    // Exhaust blast, when present, dominates both.
+    // Draft — all three sources are additive through the smokebox:
+    // natural chimney effect, blower jet, and cylinder exhaust blast.
+    // Blower effectiveness scales with gauge pressure — no pressure, no jet.
     const exhaustDraft = min(1, this._smoothedExhaustRate / c.exhaustDraftRef)
                          * c.exhaustDraftMax;
-    const blowerDraft = this.blower * c.blowerDraftFactor;
-    const draft = max(c.naturalDraft + blowerDraft, exhaustDraft);
+    const blowerGaugeP = max(0, this.boilerPressure - c.pAtm);
+    const blowerPFrac = min(1, Math.sqrt(blowerGaugeP / 800));
+    const blowerDraft = this.blower * blowerPFrac * c.blowerDraftFactor;
+    const draft = c.naturalDraft + blowerDraft + exhaustDraft;
 
-    // Blower steam consumption (drawn from superheater mass)
-    if (this.blower > 0) {
-      const blowerFlow = this.blower * c.blowerMaxFlow * dt;
+    // Blower steam consumption (drawn from superheater mass, scaled by pressure)
+    if (this.blower > 0 && blowerPFrac > 0.001) {
+      const blowerFlow = this.blower * blowerPFrac * c.blowerMaxFlow * dt;
       const drawn = min(blowerFlow, this.superMass);
       this.superMass = max(1e-6, this.superMass - drawn);
     }
