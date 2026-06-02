@@ -377,6 +377,16 @@ use the prevailing convention for your language or libraries.
 But, if you have the liberty to establish a precedent, I recommend “size” and
 to accept no substitutes.
 
+# Upstream and downstream are forbidden
+
+As with "decimate", you are right about which stream is up and down, but half
+of the world disagrees with you.
+That complicates communication somewhat.
+Consider naming the origin and destination, the source and target, the
+initiator and responder, the sender and receiver, `from` and `to`, the
+dependency and the dependant, the cause and the effect, the spring and the sink.
+Note that `source` and `target` are the same length.
+
 # And so on
 
 The purpose of these rules is to replicate your system of naming through
